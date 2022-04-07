@@ -34,7 +34,7 @@ Sidebar {.sidebar data-width=350}
 selectInput(
   "espece",
   "Choisissez une espèce",
-  choices = unique(datapt$esp_nom_commun),
+  choices = unique(pt_data$esp_nom_commun),
   selected = 1
 )
 
@@ -51,20 +51,23 @@ selectInput(
 ```{r, echo = FALSE}
 # Inspiration : https://www.infoworld.com/video/95368/how-to-boost-r-markdown-interactivity-with-runtime-shiny
 
-# sliderInput(inputId = "annees",
-#             label = "Suivi temporel",
-#             min = min(datapt$annee,na.rm = TRUE),
-#             max = max(datapt$annee,na.rm = TRUE),
-#             value = c(min(data$annee,na.rm = TRUE), max(data$annee,na.rm = TRUE)) ,
-#             round = TRUE,
-#             sep = "")
+sliderInput(inputId = "annees",
+            label = "Suivi temporel",
+            min = min(pt_data$annee, na.rm = TRUE),
+            max = max(pt_data$annee, na.rm = TRUE),
+            value = c(min(pt_data$annee, na.rm = TRUE),
+                      max(pt_data$annee, na.rm = TRUE)) ,
+            round = TRUE,
+            sep = "")
 
-# databv <- reactive({databv
-#     
-#   })
+esp_nom_commun <- reactive({pt_data %>% 
+    slice(1) %>% 
+    pull(code_espece) %>% 
+    paste0(" : ", input$espece)
+  })
 
-datapt <- reactive({datapt %>%
-    filter(esp_nom_commun == input$espece) %>% nrow
+sel_pt_data <- reactive({pt_data %>%
+    filter(esp_nom_commun == input$espece)
   })
 ```
 
@@ -77,12 +80,28 @@ datapt <- reactive({datapt %>%
 #   mapview::mapview(datapt(), zcol="presence")%>%
 #     .@map
 #   })
+n_lignes <- reactive({
+  sel_pt_data() %>%
+    nrow()
 
-renderValueBox(datapt())
+})
 
-# renderDataTable(datapt() %>%
-#                   head)
+lignes <- reactive({
+  
+  sel_pt_data() %>%
+    head() %>% 
+    DT::renderDataTable()
+  })
+```
 
+
+```{r, echo = FALSE}
+renderValueBox(esp_nom_commun())
+renderValueBox(paste0(n_lignes(), " observations"))
+#
+DT::renderDataTable({lignes()})
+#
+DT::dataTableOutput(lignes())
 
 ```
 
