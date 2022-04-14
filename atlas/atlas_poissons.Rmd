@@ -1,24 +1,22 @@
 ---
-title: "Atlas des poissons de Bretagne"
+title: "Atlas des poissons d'eau douce de Bretagne"
+runtime: shiny
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
-runtime: shiny
+    theme: cosmo
+
 ---
 
 ```{r setup, include = FALSE, echo = FALSE}
 library(flexdashboard)
-library(plotly)
-library(shiny)
-library(mapview)
-library(leaflet)
 library(tidyverse)
-library(lubridate)
+library(plotly)
+library(mapview)
+library(shiny)
 library(sf)
-library(aspe)
-library(atlaspoissons)
-library(devtools)
+library(leaflet)
 ```
 
 
@@ -34,77 +32,107 @@ Sidebar {.sidebar data-width=350}
 selectInput(
   "espece",
   "Choisissez une espèce",
-  choices = unique(pt_data$esp_nom_commun),
+  choices = unique(data_pt$esp_nom_commun),
   selected = 1
 )
 
-                   
-
+sliderInput(
+  inputId = "annees",
+  label = "Suivi temporel",
+  min = min(data_pt$annee, na.rm = TRUE),
+  max = max(data_pt$annee, na.rm = TRUE),
+  value = c(
+    min(data_pt$annee, na.rm = TRUE),
+    max(data_pt$annee, na.rm = TRUE)
+  ) ,
+  round = TRUE,
+  sep = ""
+)
 ```
 
+```{r}
+sel_pt_data <- reactive({
+  data_pt %>%
+    filter(esp_nom_commun == input$espece,
+           annee >= input$annees[1],
+           annee <= input$annees[2]) %>% 
+  group_by(code_station) %>% 
+    summarise(
+      effectif_tot = sum(effectif, na.rm = T),
+      nb_annees_ech = n_distinct(annee),
+      presence = (effectif_tot > 0) 
+    )
+  })
 
 
 
-# Carte de synthèse
+sel_pt_data_geo <- reactive({
+  pts_geo %>% 
+    filter(code_station %in% sel_pt_data()$code_station) %>% 
+    left_join(y = sel_pt_data()) 
+  })
 
 
-```{r, echo = FALSE}
-# Inspiration : https://www.infoworld.com/video/95368/how-to-boost-r-markdown-interactivity-with-runtime-shiny
 
-sliderInput(inputId = "annees",
-            label = "Suivi temporel",
-            min = min(pt_data$annee, na.rm = TRUE),
-            max = max(pt_data$annee, na.rm = TRUE),
-            value = c(min(pt_data$annee, na.rm = TRUE),
-                      max(pt_data$annee, na.rm = TRUE)) ,
-            round = TRUE,
-            sep = "")
-
-esp_nom_commun <- reactive({pt_data %>% 
+esp_nom_commun <- reactive({
+  sel_pt_data() %>% 
     slice(1) %>% 
-    pull(code_espece) %>% 
+    pull(esp_nom_commun) %>% 
     paste0(" : ", input$espece)
   })
 
-sel_pt_data <- reactive({pt_data %>%
-    filter(esp_nom_commun == input$espece)
-  })
-```
 
-<!-- Nombre de sites (points) échantillonnés au moins `r reactive({input$n_annees})` années : `r reactive({n_pops()})` -->
-
-```{r, echo = FALSE}
-# solution trouvée sur https://stackoverflow.com/questions/36679944/mapview-for-shiny
-
-# m1 <- reactive({
-#   mapview::mapview(datapt(), zcol="presence")%>%
-#     .@map
-#   })
 n_lignes <- reactive({
   sel_pt_data() %>%
     nrow()
-
 })
 
-lignes <- reactive({
-  
-  sel_pt_data() %>%
-    head() %>% 
-    DT::renderDataTable()
+
+m1 <- reactive({
+  mapview::mapview(sel_pt_data_geo(),
+                   zcol = "presence") %>%
+    .@map
   })
 ```
 
 
-```{r, echo = FALSE}
+
+
+
+
+
+# Carte b
+
+
+
+Bla
+
+### ariof^ù
+
+```{r}
 renderValueBox(esp_nom_commun())
 renderValueBox(paste0(n_lignes(), " observations"))
-#
-DT::renderDataTable({lignes()})
-#
-DT::dataTableOutput(lignes())
-
 ```
 
+
+### arf
+
+pt_geo
+```{r}
+pts_geo %>% class()
+```
+
+sel_pt_data
+```{r}
+reactive({sel_pt_data() %>% class()})
+```
+
+sel_pt_geo
+```{r}
+reactive({sel_ope_geo() %>% class()})
+```
+
+# aeurhf
 
 ```{r}
     # zoom_level <- reactive({
@@ -115,30 +143,35 @@ DT::dataTableOutput(lignes())
     #     }
     #   zoom
     # })
-```
 
-<!-- zoom_level : `r reactive({zoom_level()})` -->
-
-
-```{r, echo = FALSE}
 # solution trouvée sur https://stackoverflow.com/questions/36679944/mapview-for-shiny
 
-# leaflet::renderLeaflet({
-#   m1() %>%
-#     leaflet::setView(-3, 48, zoom = 8)
-#   })
+# reactive({lignes() %>% class()})
+
+leaflet::renderLeaflet({
+  m1() #%>%
+   # leaflet::setView(-3, 48, zoom = 8)
+  })
 
 ```
 
+# bl
+
+```{r}
+h1("rpg")
+```
+
+
+ESPECE `r reactive({esp_nom_commun()})`
+
+Variables de lignes() : `r reactive({names(sel_pt_data()) %>% paste(collapse = " / ")})`
 
 
 # Méthodologie
 
 Expliquer ici la méthodologie
 
-```{r, eval = FALSE, echo = TRUE}
 
-```
 
 
 
