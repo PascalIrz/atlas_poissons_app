@@ -32,8 +32,7 @@ Sidebar {.sidebar data-width=350}
 selectInput(
   "espece",
   "Choisissez une espèce",
-  choices = unique(pt_data$code_espece),
-  # choices = unique(pt_data$esp_nom_commun),
+  choices = unique(pt_data$esp_nom_commun),
   selected = 1
 )
 
@@ -54,12 +53,9 @@ sliderInput(
 ```{r}
 sel_pt_data <- reactive({
   pt_data %>%
-    filter(code_espece == input$espece,
+    filter(esp_nom_commun == input$espece,
            annee >= input$annees[1],
            annee <= input$annees[2]) %>% 
-    # filter(esp_nom_commun == input$espece,
-    #        annee >= input$annees[1],
-    #        annee <= input$annees[2]) %>% 
   group_by(code_station) %>% 
     summarise(
       effectif_tot = sum(effectif, na.rm = T),
@@ -81,8 +77,7 @@ sel_pt_data_geo <- reactive({
 esp_nom_commun <- reactive({
   sel_pt_data() %>% 
     slice(1) %>% 
-        pull(code_espece) %>% 
-    # pull(esp_nom_commun) %>% 
+    pull(esp_nom_commun) %>% 
     paste0(" : ", input$espece)
   })
 
@@ -110,41 +105,7 @@ m1
 
 ```
 
-
-
-
-# Carte b
-
-
-
-Bla
-
-### ariof^ù
-
-```{r}
-renderValueBox(esp_nom_commun())
-renderValueBox(paste0(n_lignes(), " observations"))
-```
-
-
-### arf
-
-pt_geo
-```{r}
-pt_data_geo %>% class()
-```
-
-sel_pt_data
-```{r}
-reactive({sel_pt_data() %>% class()})
-```
-
-sel_pt_geo
-```{r}
-reactive({sel_ope_geo() %>% class()})
-```
-
-# aeurhf
+# zoom
 
 ```{r}
     # zoom_level <- reactive({
@@ -166,17 +127,6 @@ leaflet::renderLeaflet({
   })
 
 ```
-
-# bl
-
-```{r}
-h1("rpg")
-```
-
-
-ESPECE `r reactive({esp_nom_commun()})`
-
-Variables de lignes() : `r reactive({names(sel_pt_data()) %>% paste(collapse = " / ")})`
 
 
 # Méthodologie
