@@ -67,9 +67,9 @@ sel_pt_data <- reactive({
 
 
 sel_pt_data_geo <- reactive({
-  pt_data_geo %>% 
-    filter(code_coords %in% sel_pt_data()$code_coords) %>% 
-    left_join(y = sel_pt_data()) 
+  pt_data_geo %>%
+    # filter(code_coords %in% sel_pt_data()$code_coords) %>%
+    left_join(y = sel_pt_data())
   })
 
 
