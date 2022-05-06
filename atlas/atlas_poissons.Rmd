@@ -32,18 +32,18 @@ Sidebar {.sidebar data-width=350}
 selectInput(
   "espece",
   "Choisissez une espèce",
-  choices = unique(data_pt$esp_nom_commun),
+  choices = unique(pt_data$esp_nom_commun),
   selected = 1
 )
 
 sliderInput(
   inputId = "annees",
   label = "Suivi temporel",
-  min = min(data_pt$annee, na.rm = TRUE),
-  max = max(data_pt$annee, na.rm = TRUE),
+  min = min(pt_data$annee, na.rm = TRUE),
+  max = max(pt_data$annee, na.rm = TRUE),
   value = c(
-    min(data_pt$annee, na.rm = TRUE),
-    max(data_pt$annee, na.rm = TRUE)
+    min(pt_data$annee, na.rm = TRUE),
+    max(pt_data$annee, na.rm = TRUE)
   ) ,
   round = TRUE,
   sep = ""
@@ -52,7 +52,7 @@ sliderInput(
 
 ```{r}
 sel_pt_data <- reactive({
-  data_pt %>%
+  pt_data %>%
     filter(esp_nom_commun == input$espece,
            annee >= input$annees[1],
            annee <= input$annees[2]) %>% 
@@ -67,25 +67,46 @@ sel_pt_data <- reactive({
 
 
 sel_pt_data_geo <- reactive({
-  pts_geo %>% 
-    filter(code_station %in% sel_pt_data()$code_station) %>% 
-    left_join(y = sel_pt_data()) 
+  pt_data_geo %>%
+    # filter(code_coords %in% sel_pt_data()$code_coords) %>%
+    left_join(y = sel_pt_data())
   })
 
+sel_bv_map_data <- reactive({
+  bv_map_data %>%
+    filter(esp_nom_commun == input$espece,
+           annee >= input$annees[1],
+           annee <= input$annees[2]) %>% 
+  group_by(code_exutoire) %>% 
+  summarise(n_an_abs = sum(statut == "Absent"),
+            n_an_pres = sum(statut == "Présent"),
+            n_an_n_d = sum(statut == "Non détecté")) %>%
+  ungroup() %>%
+  mutate(statut = case_when(
+    n_an_pres > 0 ~ "Présent",
+    n_an_pres == 0 & n_an_abs > 0 ~ "Absent",
+    TRUE ~ "Non détecté"
+  ))
+})
 
+sel_bv_map_data_geo <- reactive({
+  bv_map_data_geo %>%
+    left_join(y = sel_bv_map_data())
+  })
 
 esp_nom_commun <- reactive({
-  sel_pt_data() %>% 
-    slice(1) %>% 
-    pull(esp_nom_commun) %>% 
+  sel_pt_data() %>%
+    slice(1) %>%
+    pull(esp_nom_commun) %>%
     paste0(" : ", input$espece)
   })
+# 
+# 
+# n_lignes <- reactive({
+#   sel_pt_data() %>%
+#     nrow()
+# })
 
-
-n_lignes <- reactive({
-  sel_pt_data() %>%
-    nrow()
-})
 
 
 m1 <- reactive({
@@ -93,46 +114,33 @@ m1 <- reactive({
                    zcol = "presence") %>%
     .@map
   })
+
+m2 <-  reactive({
+  mapview::mapview(sel_bv_map_data_geo(),
+                   zcol = "statut") %>%
+    .@map
+  })
 ```
 
 
-
-
-
-
-
-# Carte b
-
-
-
-Bla
-
-### ariof^ù
-
+# Cartographie
 ```{r}
-renderValueBox(esp_nom_commun())
-renderValueBox(paste0(n_lignes(), " observations"))
+
+    # zoom_level <- reactive({
+    #     if(is.null(input$m1_zoom)) {
+    #       zoom <- 6
+    #     } else {
+    #       zoom <- input$m1_zoom
+    #     }
+    #   zoom
+    # })
+
+leaflet::renderLeaflet({ m1() })
+
+
 ```
 
-
-### arf
-
-pt_geo
-```{r}
-pts_geo %>% class()
-```
-
-sel_pt_data
-```{r}
-reactive({sel_pt_data() %>% class()})
-```
-
-sel_pt_geo
-```{r}
-reactive({sel_ope_geo() %>% class()})
-```
-
-# aeurhf
+# zoom
 
 ```{r}
     # zoom_level <- reactive({
@@ -148,23 +156,23 @@ reactive({sel_ope_geo() %>% class()})
 
 # reactive({lignes() %>% class()})
 
-leaflet::renderLeaflet({
-  m1() #%>%
-   # leaflet::setView(-3, 48, zoom = 8)
-  })
+# leaflet::renderLeaflet({
+#   m1() #%>%
+#    # leaflet::setView(-3, 48, zoom = 8)
+#   })
+
+leaflet::renderLeaflet({ m2() })
 
 ```
 
-# bl
+# affichage
 
 ```{r}
-h1("rpg")
+
+reactive ({ sel_bv_map_data_geo() %>% 
+  head(10) }) 
+
 ```
-
-
-ESPECE `r reactive({esp_nom_commun()})`
-
-Variables de lignes() : `r reactive({names(sel_pt_data()) %>% paste(collapse = " / ")})`
 
 
 # Méthodologie
