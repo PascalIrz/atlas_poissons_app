@@ -72,20 +72,40 @@ sel_pt_data_geo <- reactive({
     left_join(y = sel_pt_data())
   })
 
+sel_bv_map_data <- reactive({
+  bv_map_data %>%
+    filter(esp_nom_commun == input$espece,
+           annee >= input$annees[1],
+           annee <= input$annees[2]) %>% 
+  group_by(code_exutoire) %>% 
+  summarise(n_an_abs = sum(statut == "Absent"),
+            n_an_pres = sum(statut == "Présent"),
+            n_an_n_d = sum(statut == "Non détecté")) %>%
+  ungroup() %>%
+  mutate(statut = case_when(
+    n_an_pres > 0 ~ "Présent",
+    n_an_pres == 0 & n_an_abs > 0 ~ "Absent",
+    TRUE ~ "Non détecté"
+  ))
+})
 
-
-esp_nom_commun <- reactive({
-  sel_pt_data() %>% 
-    slice(1) %>% 
-    pull(esp_nom_commun) %>% 
-    paste0(" : ", input$espece)
+sel_bv_map_data_geo <- reactive({
+  bv_map_data_geo %>%
+    left_join(y = sel_bv_map_data())
   })
 
-
-n_lignes <- reactive({
+esp_nom_commun <- reactive({
   sel_pt_data() %>%
-    nrow()
-})
+    slice(1) %>%
+    pull(esp_nom_commun) %>%
+    paste0(" : ", input$espece)
+  })
+# 
+# 
+# n_lignes <- reactive({
+#   sel_pt_data() %>%
+#     nrow()
+# })
 
 
 
@@ -94,13 +114,28 @@ m1 <- reactive({
                    zcol = "presence") %>%
     .@map
   })
+
+m2 <-  reactive({
+  mapview::mapview(sel_bv_map_data_geo(),
+                   zcol = "statut") %>%
+    .@map
+  })
 ```
 
 
 # Cartographie
 ```{r}
 
-m1
+    # zoom_level <- reactive({
+    #     if(is.null(input$m1_zoom)) {
+    #       zoom <- 6
+    #     } else {
+    #       zoom <- input$m1_zoom
+    #     }
+    #   zoom
+    # })
+
+leaflet::renderLeaflet({ m1() })
 
 
 ```
@@ -121,10 +156,21 @@ m1
 
 # reactive({lignes() %>% class()})
 
-leaflet::renderLeaflet({
-  m1() #%>%
-   # leaflet::setView(-3, 48, zoom = 8)
-  })
+# leaflet::renderLeaflet({
+#   m1() #%>%
+#    # leaflet::setView(-3, 48, zoom = 8)
+#   })
+
+leaflet::renderLeaflet({ m2() })
+
+```
+
+# affichage
+
+```{r}
+
+reactive ({ sel_bv_map_data_geo() %>% 
+  head(10) }) 
 
 ```
 
