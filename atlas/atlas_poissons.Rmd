@@ -51,6 +51,10 @@ sliderInput(
 ```
 
 ```{r}
+bv_simp_geo <- reactive ({bv_simp_geo})
+
+pt_geo <- reactive ({pt_geo})
+
 sel_pt_data <- reactive({
   pt_data %>% 
   filter(annee >= input$annee[1],
@@ -64,8 +68,8 @@ sel_pt_data <- reactive({
 
 
 sel_pt_data_geo <- reactive({
-  pt_geo %>% 
-  left_join(sel_pt_data) %>% 
+  pt_geo() %>% 
+  left_join(sel_pt_data()) %>% 
   mutate(
     statut = as.character(statut),
     statut = ifelse(is.na(statut),
@@ -83,16 +87,19 @@ sel_bv_map_data <- reactive({
   ungroup()
 })
 
+
+
 sel_bv_map_data_geo <- reactive({
   bv_simp_geo %>% 
-  left_join(sel_bv_map_data) %>% 
-  mutate(statut = as.character(statut),
-         statut = ifelse(is.na(statut),
-                          "Non prospecté",
-                          statut),
-         esp_nom_commun = ifelse(is.na(esp_nom_commun),
-                              mon_espece,
-                              esp_nom_commun))
+  left_join(sel_bv_map_data()) 
+  # %>%
+  # mutate(statut = as.character(statut),
+  #        statut = ifelse(is.na(statut),
+  #                         "Non prospecté",
+  #                         statut),
+  #        esp_nom_commun = ifelse(is.na(esp_nom_commun),
+  #                             mon_espece,
+  #                             esp_nom_commun))
   })
 
 
@@ -130,7 +137,7 @@ m2 <- reactive({
     #   zoom
     # })
 
-leaflet::renderLeaflet({ m2() })
+leaflet::renderLeaflet({ m1() })
 
 
 ```
@@ -163,9 +170,6 @@ leaflet::renderLeaflet({ m2() })
 # affichage
 
 ```{r}
-
-reactive ({ sel_bv_map_data_geo() %>% 
-  head(10) }) 
 
 ```
 
