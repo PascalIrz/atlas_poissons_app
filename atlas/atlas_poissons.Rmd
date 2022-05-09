@@ -45,81 +45,76 @@ sliderInput(
     min(pt_data$annee, na.rm = TRUE),
     max(pt_data$annee, na.rm = TRUE)
   ) ,
-  round = TRUE,
+  round = 1, step = 1,
   sep = ""
 )
 ```
 
 ```{r}
 sel_pt_data <- reactive({
-  pt_data %>%
-    filter(esp_nom_commun == input$espece,
-           annee >= input$annees[1],
-           annee <= input$annees[2]) %>% 
-  group_by(code_station) %>% 
-    summarise(
-      effectif_tot = sum(effectif, na.rm = T),
-      nb_annees_ech = n_distinct(annee),
-      presence = (effectif_tot > 0) 
-    )
+  pt_data %>% 
+  filter(annee >= input$annee[1],
+         annee <= input$annee[2],
+         esp_nom_commun == input$espece) %>% 
+  group_by(code_coords) %>%
+    summarise(statut = max(statut)) %>%
+  ungroup()
   })
 
 
 
 sel_pt_data_geo <- reactive({
-  pt_data_geo %>%
-    # filter(code_coords %in% sel_pt_data()$code_coords) %>%
-    left_join(y = sel_pt_data())
+  pt_geo %>% 
+  left_join(sel_pt_data) %>% 
+  mutate(
+    statut = as.character(statut),
+    statut = ifelse(is.na(statut),
+                    "Non prospecté",
+                    statut))
   })
 
 sel_bv_map_data <- reactive({
-  bv_map_data %>%
-    filter(esp_nom_commun == input$espece,
-           annee >= input$annees[1],
-           annee <= input$annees[2]) %>% 
-  group_by(code_exutoire) %>% 
-  summarise(n_an_abs = sum(statut == "Absent"),
-            n_an_pres = sum(statut == "Présent"),
-            n_an_n_d = sum(statut == "Non détecté")) %>%
-  ungroup() %>%
-  mutate(statut = case_when(
-    n_an_pres > 0 ~ "Présent",
-    n_an_pres == 0 & n_an_abs > 0 ~ "Absent",
-    TRUE ~ "Non détecté"
-  ))
+  bv_data %>% 
+  filter(annee >= input$annee[1],
+         annee <= input$annee[2],
+         esp_nom_commun == input$espece) %>% 
+  group_by(code_exutoire, code_espece, esp_nom_commun) %>%
+    summarise(statut = max(statut)) %>% 
+  ungroup()
 })
 
 sel_bv_map_data_geo <- reactive({
-  bv_map_data_geo %>%
-    left_join(y = sel_bv_map_data())
+  bv_simp_geo %>% 
+  left_join(sel_bv_map_data) %>% 
+  mutate(statut = as.character(statut),
+         statut = ifelse(is.na(statut),
+                          "Non prospecté",
+                          statut),
+         esp_nom_commun = ifelse(is.na(esp_nom_commun),
+                              mon_espece,
+                              esp_nom_commun))
   })
-
-esp_nom_commun <- reactive({
-  sel_pt_data() %>%
-    slice(1) %>%
-    pull(esp_nom_commun) %>%
-    paste0(" : ", input$espece)
-  })
-# 
-# 
-# n_lignes <- reactive({
-#   sel_pt_data() %>%
-#     nrow()
-# })
-
 
 
 m1 <- reactive({
-  mapview::mapview(sel_pt_data_geo(),
-                   zcol = "presence") %>%
+  mapview::mapview(sel_bv_map_data_geo(),
+        zcol = "statut",
+        layer.name = input$espece,
+        map.types = c("OpenStreetMap", "Esri.WorldImagery"),
+        col.regions = c("red", "pink", "grey70", "green"),
+        alpha.regions = 0.5) %>%
     .@map
   })
 
-m2 <-  reactive({
-  mapview::mapview(sel_bv_map_data_geo(),
-                   zcol = "statut") %>%
+m2 <- reactive({ 
+  mapview(sel_pt_data_geo(),
+          zcol = "statut",
+          col.region = c("red", "pink", "grey90", "green"),
+          map.types = c("OpenStreetMap", "Esri.WorldImagery"),
+          legend = FALSE) %>%
     .@map
   })
+
 ```
 
 
@@ -135,7 +130,7 @@ m2 <-  reactive({
     #   zoom
     # })
 
-leaflet::renderLeaflet({ m1() })
+leaflet::renderLeaflet({ m2() })
 
 
 ```
@@ -178,14 +173,3 @@ reactive ({ sel_bv_map_data_geo() %>%
 # Méthodologie
 
 Expliquer ici la méthodologie
-
-
-
-
-
-
-
-
-
-
-
