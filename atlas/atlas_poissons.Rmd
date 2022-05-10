@@ -36,34 +36,27 @@ selectInput(
   selected = 1
 )
 
-sliderInput(
-  inputId = "annees",
-  label = "Suivi temporel",
-  min = min(pt_data$annee, na.rm = TRUE),
-  max = max(pt_data$annee, na.rm = TRUE),
-  value = c(
-    min(pt_data$annee, na.rm = TRUE),
-    max(pt_data$annee, na.rm = TRUE)
-  ) ,
-  round = 1, step = 1,
-  sep = ""
-)
+# sliderInput(
+#   inputId = "annees",
+#   label = "Suivi temporel",
+#   min = min(pt_data$annee, na.rm = TRUE),
+#   max = max(pt_data$annee, na.rm = TRUE),
+#   value = c(
+#     min(pt_data$annee, na.rm = TRUE),
+#     max(pt_data$annee, na.rm = TRUE)
+#   ) ,
+#   round = 1, step = 1,
+#   sep = ""
+# )
 ```
 
 ```{r}
 
-# pt_data <- reactive({ pt_data })
-# 
-# pt_geo <- reactive ({ pt_geo })
-# 
-# bv_data <- reactive ({ bv_data })
-# 
-# bv_simp_geo <- reactive ({bv_simp_geo})
-
 sel_pt_data <- reactive({
   pt_data %>% 
-  filter(annee >= input$annee[1],
-         annee <= input$annee[2],
+  filter(
+    # annee >= input$annee[1],
+    #      annee <= input$annee[2],
          esp_nom_commun == input$espece) %>% 
   group_by(code_coords) %>%
     summarise(statut = max(statut)) %>%
@@ -84,8 +77,9 @@ sel_pt_data_geo <- reactive({
 
 sel_bv_map_data <- reactive({
   bv_data %>% 
-  filter(annee >= input$annee[1],
-         annee <= input$annee[2],
+  filter(
+    # annee >= input$annee[1],
+    #      annee <= input$annee[2],
          esp_nom_commun == input$espece) %>% 
   group_by(code_exutoire, code_espece, esp_nom_commun) %>%
     summarise(statut = max(statut)) %>% 
