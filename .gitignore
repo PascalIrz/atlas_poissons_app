@@ -2,6 +2,7 @@
 .Rhistory
 .Ruserdata
 *.html
+*.RData
 /raw_data/
 /processed_data/
 /scripts/rsconnect
