@@ -51,9 +51,14 @@ sliderInput(
 ```
 
 ```{r}
-bv_simp_geo <- reactive ({bv_simp_geo})
 
-pt_geo <- reactive ({pt_geo})
+# pt_data <- reactive({ pt_data })
+# 
+# pt_geo <- reactive ({ pt_geo })
+# 
+# bv_data <- reactive ({ bv_data })
+# 
+# bv_simp_geo <- reactive ({bv_simp_geo})
 
 sel_pt_data <- reactive({
   pt_data %>% 
@@ -68,7 +73,7 @@ sel_pt_data <- reactive({
 
 
 sel_pt_data_geo <- reactive({
-  pt_geo() %>% 
+  pt_geo %>% 
   left_join(sel_pt_data()) %>% 
   mutate(
     statut = as.character(statut),
@@ -91,7 +96,7 @@ sel_bv_map_data <- reactive({
 
 sel_bv_map_data_geo <- reactive({
   bv_simp_geo %>% 
-  left_join(sel_bv_map_data()) 
+  dplyr::inner_join(sel_bv_map_data()) 
   # %>%
   # mutate(statut = as.character(statut),
   #        statut = ifelse(is.na(statut),
