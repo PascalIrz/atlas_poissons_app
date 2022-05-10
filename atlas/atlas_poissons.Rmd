@@ -78,8 +78,8 @@ sel_pt_data_geo <- reactive({
 
 sel_bv_map_data <- reactive({
   bv_data %>% 
-  filter(annee >= input$annee[1],
-         annee <= input$annee[2],
+  filter(annee >= input$annees[1],
+         annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
   group_by(code_exutoire, code_espece, esp_nom_commun) %>%
     summarise(statut = max(statut)) %>% 
