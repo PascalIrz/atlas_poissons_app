@@ -55,9 +55,8 @@ sliderInput(
 
 sel_pt_data <- reactive({
   pt_data %>% 
-  filter(
-    # annee >= input$annee[1],
-    #      annee <= input$annee[2],
+  filter(annee >= input$annees[1],
+         annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
   group_by(code_coords) %>%
     summarise(statut = max(statut)) %>%
@@ -137,6 +136,8 @@ m2 <- reactive({
 
 leaflet::renderLeaflet({ m1() })
 
+# leaflet::renderLeaflet({ m1() }) + leaflet::renderLeaflet({ m2() })
+
 
 ```
 
@@ -160,8 +161,6 @@ leaflet::renderLeaflet({ m1() })
 #   m1() #%>%
 #    # leaflet::setView(-3, 48, zoom = 8)
 #   })
-
-leaflet::renderLeaflet({ m2() })
 
 ```
 
