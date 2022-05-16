@@ -53,21 +53,21 @@ sliderInput(
 
 ```{r}
 
-sel_pt_data <- reactive({
+
+pt_data_aggr <- reactive({
   pt_data %>% 
   filter(annee >= input$annees[1],
          annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
   group_by(code_coords) %>%
-    summarise(statut = max(statut)) %>%
+    summarise(statut = max(statut)) %>% 
   ungroup()
   })
 
 
-
-sel_pt_data_geo <- reactive({
+pt_map_data <- reactive({ 
   pt_geo %>% 
-  left_join(sel_pt_data()) %>% 
+  left_join(pt_data_aggr()) %>% 
   mutate(
     statut = as.character(statut),
     statut = ifelse(is.na(statut),
@@ -75,7 +75,8 @@ sel_pt_data_geo <- reactive({
                     statut))
   })
 
-sel_bv_map_data <- reactive({
+
+bv_data_aggr <- reactive({
   bv_data %>% 
   filter(annee >= input$annees[1],
          annee <= input$annees[2],
@@ -83,41 +84,44 @@ sel_bv_map_data <- reactive({
   group_by(code_exutoire, code_espece, esp_nom_commun) %>%
     summarise(statut = max(statut)) %>% 
   ungroup()
-})
+  })
 
 
-
-sel_bv_map_data_geo <- reactive({
+bv_map_data <- reactive({
   bv_simp_geo %>% 
-  dplyr::inner_join(sel_bv_map_data()) %>%
+  left_join(bv_data_aggr()) %>% 
   mutate(statut = as.character(statut),
          statut = ifelse(is.na(statut),
                           "Non prospecté",
                           statut),
          esp_nom_commun = ifelse(is.na(esp_nom_commun),
-                              mon_espece,
-                              esp_nom_commun))
+                              input$espece,
+                              esp_nom_commun)) 
   })
 
-
 m1 <- reactive({
-  mapview::mapview(sel_bv_map_data_geo(),
+  (mapview(bv_map_data(),
         zcol = "statut",
         layer.name = input$espece,
         map.types = c("OpenStreetMap", "Esri.WorldImagery"),
         col.regions = c("red", "pink", "grey70", "green"),
-        alpha.regions = 0.5) %>%
-    .@map
-  })
-
-m2 <- reactive({ 
-  mapview(sel_pt_data_geo(),
+        alpha.regions = 0.5) +
+    mapview(pt_map_data(),
           zcol = "statut",
           col.region = c("red", "pink", "grey90", "green"),
           map.types = c("OpenStreetMap", "Esri.WorldImagery"),
-          legend = FALSE) %>%
+          legend = FALSE)) %>%
     .@map
   })
+
+# m2 <- reactive({ 
+#   mapview(sel_pt_data_geo(),
+#           zcol = "statut",
+#           col.region = c("red", "pink", "grey90", "green"),
+#           map.types = c("OpenStreetMap", "Esri.WorldImagery"),
+#           legend = FALSE) %>%
+#     .@map
+#   })
 
 ```
 
@@ -134,9 +138,9 @@ m2 <- reactive({
     #   zoom
     # })
 
-leaflet::renderLeaflet({ m1() })
+leaflet::renderLeaflet({ m1() %>% 
+    leaflet::setView(-3, 48.2, zoom = 8) })
 
-# leaflet::renderLeaflet({ m1() }) + leaflet::renderLeaflet({ m2() })
 
 
 ```
@@ -144,14 +148,14 @@ leaflet::renderLeaflet({ m1() })
 # zoom
 
 ```{r}
-    # zoom_level <- reactive({
-    #     if(is.null(input$m1_zoom)) {
-    #       zoom <- 6
-    #     } else {
-    #       zoom <- input$m1_zoom
-    #     }
-    #   zoom
-    # })
+    zoom_level <- reactive({
+        if(is.null(input$m1_zoom)) {
+          zoom <- 6
+        } else {
+          zoom <- input$m1_zoom
+        }
+      zoom
+    })
 
 # solution trouvée sur https://stackoverflow.com/questions/36679944/mapview-for-shiny
 
