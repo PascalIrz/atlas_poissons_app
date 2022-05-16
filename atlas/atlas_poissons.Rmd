@@ -114,29 +114,12 @@ m1 <- reactive({
     .@map
   })
 
-# m2 <- reactive({ 
-#   mapview(sel_pt_data_geo(),
-#           zcol = "statut",
-#           col.region = c("red", "pink", "grey90", "green"),
-#           map.types = c("OpenStreetMap", "Esri.WorldImagery"),
-#           legend = FALSE) %>%
-#     .@map
-#   })
-
 ```
 
 
 # Cartographie
 ```{r}
 
-    # zoom_level <- reactive({
-    #     if(is.null(input$m1_zoom)) {
-    #       zoom <- 6
-    #     } else {
-    #       zoom <- input$m1_zoom
-    #     }
-    #   zoom
-    # })
 
 leaflet::renderLeaflet({ m1() %>% 
     leaflet::setView(-3, 48.2, zoom = 8) })
@@ -148,23 +131,7 @@ leaflet::renderLeaflet({ m1() %>%
 # zoom
 
 ```{r}
-    zoom_level <- reactive({
-        if(is.null(input$m1_zoom)) {
-          zoom <- 6
-        } else {
-          zoom <- input$m1_zoom
-        }
-      zoom
-    })
 
-# solution trouvée sur https://stackoverflow.com/questions/36679944/mapview-for-shiny
-
-# reactive({lignes() %>% class()})
-
-# leaflet::renderLeaflet({
-#   m1() #%>%
-#    # leaflet::setView(-3, 48, zoom = 8)
-#   })
 
 ```
 
