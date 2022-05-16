@@ -12,11 +12,11 @@ output:
 ```{r setup, include = FALSE, echo = FALSE}
 library(flexdashboard)
 library(tidyverse)
-library(plotly)
 library(mapview)
 library(shiny)
 library(sf)
 library(leaflet)
+library(leafpop)
 ```
 
 
@@ -59,7 +59,7 @@ pt_data_aggr <- reactive({
   filter(annee >= input$annees[1],
          annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
-  group_by(code_coords) %>%
+  group_by(code_coords, esp_nom_commun, localisation, effectif) %>%
     summarise(statut = max(statut)) %>% 
   ungroup()
   })
@@ -105,12 +105,21 @@ m1 <- reactive({
         layer.name = input$espece,
         map.types = c("OpenStreetMap", "Esri.WorldImagery"),
         col.regions = c("red", "pink", "grey70", "green"),
-        alpha.regions = 0.5) +
+        alpha.regions = 0.5,
+        popup = popupTable(bv_map_data(),
+                   zcol = c("toponyme",
+                            "esp_nom_commun",
+                            "statut"))) +
     mapview(pt_map_data(),
           zcol = "statut",
           col.region = c("red", "pink", "grey90", "green"),
           map.types = c("OpenStreetMap", "Esri.WorldImagery"),
-          legend = FALSE)) %>%
+          legend = FALSE,
+          popup = popupTable(pt_map_data(),
+                   zcol = c("localisation",
+                            "esp_nom_commun",
+                            "statut",
+                            "effectif")))) %>%
     .@map
   })
 
@@ -148,14 +157,16 @@ leaflet::renderLeaflet({ m1() %>%
 # zoom
 
 ```{r}
-    zoom_level <- reactive({
-        if(is.null(input$m1_zoom)) {
-          zoom <- 6
-        } else {
-          zoom <- input$m1_zoom
-        }
-      zoom
-    })
+    # zoom_level <- reactive({
+    #     if(is.null(input$m1_zoom)) {
+    #       zoom <- 6
+    #     } else {
+    #       zoom <- input$m1_zoom
+    #     }
+    #   zoom
+    # })
+
+head(pt_map_data)
 
 # solution trouvée sur https://stackoverflow.com/questions/36679944/mapview-for-shiny
 
