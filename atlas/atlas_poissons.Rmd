@@ -144,4 +144,5 @@ leaflet::renderLeaflet({ m1() %>%
 
 # Méthodologie
 
-Expliquer ici la méthodologie
+- Jeux de données  
+- Création des fonctions  
