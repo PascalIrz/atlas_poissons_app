@@ -132,34 +132,52 @@ leaflet::renderLeaflet({ m1() %>%
 
 ```{r}
 
-# A NETTOYER
+# =====================================
+# CALCUL DATA POUR ETUDE
 
-occurence_sp <- reactive ({ 
-  pt_data %>% 
-  filter(esp_nom_commun == input$espece, 
-         statut == "Présent") %>% 
-  group_by(annee, statut) %>% 
-  count(statut, sort = TRUE) %>% 
-  summarise(total = sum(n))
-  })
+data_etude <- reactive ({
+  pt_data %>%
+    filter(esp_nom_commun == input$espece,
+           statut == "Présent") %>% 
+    group_by(annee, statut) %>%
+    summarise(abondance = sum(effectif),
+              n_presence = n())
+})
 
 g1 <- reactive ({
-  ggplot(occurence_sp(), aes(annee, total)) +
-  geom_col() +
-  ylab("Nombre d'occurences") +
+  ggplot(data_etude(), aes(annee, n_presence)) +
+    geom_smooth(se = FALSE, method = "lm") +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(ylim = c(0,NA))+
+    ylab("Nombre de présences de l'espèce en Bretagne") +
     xlab("Années")
 })
 
-```
-
-```{r}
-
-renderPlot({
-  g1()
+g2 <- reactive ({
+  ggplot(data_etude(), aes(annee, abondance)) +
+    geom_smooth(se = FALSE, method = "lm") +
+    geom_point() +
+    geom_line() +
+    coord_cartesian(ylim = c(0,NA))+
+    xlab("Années") + 
+    ylab("Abondance de l'espèce en Bretagne")
 })
 
 ```
 
+## Présences
+```{r}
+renderPlot({ g1() })
+
+```
+
+## Abondances
+```{r}
+
+renderPlot({ g2() })
+
+```
 
 # affichage
 
