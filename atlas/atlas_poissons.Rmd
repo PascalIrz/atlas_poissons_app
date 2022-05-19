@@ -134,113 +134,20 @@ leaflet::renderLeaflet({ m1() %>%
 
 # A NETTOYER
 
-occurence <- reactive ({ 
+occurence_sp <- reactive ({ 
   pt_data %>% 
-  filter(esp_nom_commun == input$espece) %>% 
-  select(statut, annee)
+  filter(esp_nom_commun == input$espece, 
+         statut == "Présent") %>% 
+  group_by(annee, statut) %>% 
+  count(statut, sort = TRUE) %>% 
+  summarise(total = sum(n))
   })
-
-occ1 <- reactive ({
-  occurence() %>% 
-  filter(annee == 2011)
-  })
-occ1 <- reactive ({
-  sum(occ1() == "Présent")
-  })
-
-occ2 <- reactive ({ 
-  occurence() %>% 
-  filter(annee == 2012)
-  })
-occ2 <- reactive ({
-  sum(occ2() == "Présent")
-  })
-
-occ3 <- reactive ({ 
-  occurence() %>% 
-  filter(annee == 2013)
-  })
-occ3 <- reactive ({
-  sum(occ3() == "Présent")
-  })
-
-occ4 <- reactive ({
-  occurence() %>% 
-  filter(annee == 2014)
-  })
-occ4 <- reactive ({
-  sum(occ4() == "Présent")
-  })
-
-occ5 <- reactive ({
-  occurence() %>% 
-  filter(annee == 2015)
-  })
-occ5 <- reactive ({
-  sum(occ5() == "Présent")
-  })
-
-occ6 <- reactive ({
-  occurence() %>% 
-  filter(annee == 2016)
-  })
-occ6 <- reactive ({
-  sum(occ6() == "Présent")
-  })
-
-occ7 <- reactive ({
-  occurence() %>% 
-  filter(annee == 2017)
-  })
-occ7 <- reactive ({
-  sum(occ7() == "Présent")
-  })
-
-occ8 <- reactive ({
-  occurence() %>% 
-  filter(annee == 2018)
-  })
-occ8 <- reactive ({
-  sum(occ8() == "Présent")
-  })
-
-occ9 <- reactive ({
-  occurence() %>% 
-  filter(annee == 2019)
-  })
-occ9 <- reactive ({
-  sum(occ9() == "Présent")
-  })
-
-occ10 <- reactive ({
-  occurence() %>% 
-  filter(annee == 2020)
-  })
-occ10 <- reactive ({
-  sum(occ10() == "Présent")
-  })
-
-occ11 <- reactive ({
-  occurence() %>% 
-  filter(annee == 2021)
-  })
-occ11 <- reactive ({
-  sum(occ11() == "Présent")
-  })
-
-annees <- pt_data %>%
-  group_by(annee) %>%
-  pull(annee) %>%
-  unique() %>%
-  sort()
-
-occ <- reactive ({c(occ1(), occ2(), occ3(), occ4(), occ5(), occ6(), occ7(), occ8(), occ9(), occ10(), occ11())})
-
-occurence_sp <- reactive ({data.frame(annees,occ())})
 
 g1 <- reactive ({
-  ggplot(occurence_sp(), aes(annees, occ)) +
-  geom_point()
+  ggplot(occurence_sp(), aes(annee, total)) +
+  geom_col() +
+  ylab("Nombre d'occurences") +
+    xlab("Années")
 })
 
 ```
