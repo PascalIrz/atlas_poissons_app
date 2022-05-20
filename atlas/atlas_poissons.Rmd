@@ -104,12 +104,13 @@ m1 <- reactive({
         zcol = "statut",
         layer.name = input$espece,
         map.types = c("OpenStreetMap", "Esri.WorldImagery"),
-        col.regions = c("red", "pink", "grey70", "green"),
+        col.regions = c("#CC0000", "#FF99CC", "grey70", "#99FF66"),
         alpha.regions = 0.5) +
     mapview(pt_map_data(),
           zcol = "statut",
-          col.region = c("red", "pink", "grey90", "green"),
+          col.region = c("#CC0000", "#FF99CC", "grey70", "#99FF66"),
           map.types = c("OpenStreetMap", "Esri.WorldImagery"),
+          cex = 4,
           legend = FALSE)) %>%
     .@map
   })
