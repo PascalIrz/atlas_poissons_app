@@ -17,6 +17,7 @@ library(mapview)
 library(shiny)
 library(sf)
 library(leaflet)
+library(atlaspoissonapp)
 ```
 
 
@@ -129,16 +130,54 @@ leaflet::renderLeaflet({ m1() %>%
 
 ```
 
-# zoom
+# Graphiques
 
 ```{r}
 
+# =====================================
+# CALCUL DATA POUR ETUDE
+
+data_etude <- reactive ({
+  pt_data %>%
+    filter(esp_nom_commun == input$espece,
+           statut == "Présent") %>%
+    group_by(annee, statut) %>%
+    summarise(abondance = sum(effectif),
+              n_presence = n())
+})
+
+g1 <- reactive ({
+  atlaspoissonapp::gg_temp(data = data_etude(),
+                           var_x = annee,
+                           var_y = n_presence)
+})
+
+g2 <- reactive ({
+  atlaspoissonapp::gg_temp(data = data_etude(),
+                           var_x = annee,
+                           var_y = abondance)
+})
+
+```
+
+## Présences
+```{r}
+renderPlot({ g1() })
+
+```
+
+## Abondances
+```{r}
+
+renderPlot({ g2() })
 
 ```
 
 # affichage
 
 ```{r}
+
+
 
 ```
 
