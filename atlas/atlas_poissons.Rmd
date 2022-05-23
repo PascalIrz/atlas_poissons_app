@@ -12,11 +12,12 @@ output:
 ```{r setup, include = FALSE, echo = FALSE}
 library(flexdashboard)
 library(tidyverse)
+library(plotly)
 library(mapview)
 library(shiny)
 library(sf)
 library(leaflet)
-library(leafpop)
+library(atlaspoissonapp)
 ```
 
 
@@ -59,7 +60,7 @@ pt_data_aggr <- reactive({
   filter(annee >= input$annees[1],
          annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
-  group_by(code_coords, esp_nom_commun, localisation, effectif) %>%
+  group_by(code_coords) %>%
     summarise(statut = max(statut)) %>% 
   ungroup()
   })
@@ -104,16 +105,13 @@ m1 <- reactive({
         zcol = "statut",
         layer.name = input$espece,
         map.types = c("OpenStreetMap", "Esri.WorldImagery"),
-        col.regions = c("red", "pink", "grey70", "green"),
-        alpha.regions = 0.5,
-        popup = popupTable(bv_map_data(),
-                   zcol = c("toponyme",
-                            "esp_nom_commun",
-                            "statut"))) +
+        col.regions = c("#CC0000", "#FF99CC", "grey70", "#99FF66"),
+        alpha.regions = 0.5) +
     mapview(pt_map_data(),
           zcol = "statut",
-          col.region = c("red", "pink", "grey90", "green"),
+          col.region = c("#CC0000", "#FF99CC", "grey70", "#99FF66"),
           map.types = c("OpenStreetMap", "Esri.WorldImagery"),
+          cex = 4,
           legend = FALSE,
           popup = popupTable(pt_map_data(),
                    zcol = c("localisation",
@@ -123,12 +121,12 @@ m1 <- reactive({
     .@map
   })
 
-
 ```
 
 
 # Cartographie
 ```{r}
+
 
 leaflet::renderLeaflet({ m1() %>% 
     leaflet::setView(-3, 48.2, zoom = 8) })
@@ -137,16 +135,54 @@ leaflet::renderLeaflet({ m1() %>%
 
 ```
 
-# zoom
+# Graphiques
 
 ```{r}
 
+# =====================================
+# CALCUL DATA POUR ETUDE
+
+data_etude <- reactive ({
+  pt_data %>%
+    filter(esp_nom_commun == input$espece,
+           statut == "Présent") %>%
+    group_by(annee, statut) %>%
+    summarise(abondance = sum(effectif),
+              n_presence = n())
+})
+
+g1 <- reactive ({
+  atlaspoissonapp::gg_temp(data = data_etude(),
+                           var_x = annee,
+                           var_y = n_presence)
+})
+
+g2 <- reactive ({
+  atlaspoissonapp::gg_temp(data = data_etude(),
+                           var_x = annee,
+                           var_y = abondance)
+})
+
+```
+
+## Présences
+```{r}
+renderPlot({ g1() })
+
+```
+
+## Abondances
+```{r}
+
+renderPlot({ g2() })
 
 ```
 
 # affichage
 
 ```{r}
+
+
 
 ```
 
