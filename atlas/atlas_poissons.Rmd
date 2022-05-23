@@ -17,6 +17,7 @@ library(mapview)
 library(shiny)
 library(sf)
 library(leaflet)
+library(atlaspoissonapp)
 ```
 
 
@@ -138,30 +139,22 @@ leaflet::renderLeaflet({ m1() %>%
 data_etude <- reactive ({
   pt_data %>%
     filter(esp_nom_commun == input$espece,
-           statut == "Présent") %>% 
+           statut == "Présent") %>%
     group_by(annee, statut) %>%
     summarise(abondance = sum(effectif),
               n_presence = n())
 })
 
 g1 <- reactive ({
-  ggplot(data_etude(), aes(annee, n_presence)) +
-    geom_smooth(se = FALSE, method = "lm") +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(ylim = c(0,NA))+
-    ylab("Nombre de présences de l'espèce en Bretagne") +
-    xlab("Années")
+  atlaspoissonapp::gg_temp(data = data_etude(),
+                           var_x = annee,
+                           var_y = n_presence)
 })
 
 g2 <- reactive ({
-  ggplot(data_etude(), aes(annee, abondance)) +
-    geom_smooth(se = FALSE, method = "lm") +
-    geom_point() +
-    geom_line() +
-    coord_cartesian(ylim = c(0,NA))+
-    xlab("Années") + 
-    ylab("Abondance de l'espèce en Bretagne")
+  atlaspoissonapp::gg_temp(data = data_etude(),
+                           var_x = annee,
+                           var_y = abondance)
 })
 
 ```
