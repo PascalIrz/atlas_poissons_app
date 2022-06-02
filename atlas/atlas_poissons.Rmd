@@ -61,7 +61,7 @@ pt_data_aggr <- reactive({
   filter(annee >= input$annees[1],
          annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
-  group_by(code_coords) %>%
+  group_by(code_coords, esp_nom_commun, localisation, effectif) %>%
     summarise(statut = max(statut)) %>% 
   ungroup()
   })
