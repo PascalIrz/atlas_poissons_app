@@ -34,7 +34,7 @@ Sidebar {.sidebar data-width=350}
 selectInput(
   "espece",
   "Choisissez une espèce",
-  choices = unique(pt_data$esp_nom_commun),
+  choices = sort(unique(pt_data$esp_nom_commun)),
   selected = 1
 )
 
