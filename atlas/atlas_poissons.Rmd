@@ -18,7 +18,7 @@ library(leafpop)
 library(shiny)
 library(sf)
 library(leaflet)
-library(atlaspoissonapp)
+source("gg_temp.R")
 ```
 
 
@@ -172,13 +172,13 @@ data_etude <- reactive ({
 })
 
 g1 <- reactive ({
-  atlaspoissonapp::gg_temp(data = data_etude(),
+  gg_temp(data = data_etude(),
                            var_x = annee,
                            var_y = n_presence)
 })
 
 g2 <- reactive ({
-  atlaspoissonapp::gg_temp(data = data_etude(),
+  gg_temp(data = data_etude(),
                            var_x = annee,
                            var_y = abondance)
 })
