@@ -117,7 +117,13 @@ m1 <- reactive({
         layer.name = input$espece,
         map.types = c("OpenStreetMap", "Esri.WorldImagery"),
         col.regions = c("#CC0000", "#FF99CC", "grey70", "#99FF66"),
-        alpha.regions = 0.5) +
+        alpha.regions = 0.5,
+          popup = popupTable(bv_map_data(),
+                   zcol = c("toponyme",
+                            "esp_nom_commun",
+                            "statut"),
+                   row.numbers=FALSE,
+                   feature.id = FALSE)) +
     mapview(pt_map_data(),
           zcol = "statut",
           col.region = c("#CC0000", "#FF99CC", "grey70", "#99FF66"),
