@@ -40,7 +40,7 @@ selectInput(
 
 sliderInput(
   inputId = "annees",
-  label = "Suivi temporel",
+  label = "Années",
   min = min(pt_data$annee, na.rm = TRUE),
   max = max(pt_data$annee, na.rm = TRUE),
   value = c(
@@ -50,6 +50,16 @@ sliderInput(
   round = 1, step = 1,
   sep = ""
 )
+
+# test <- reactive ({ 
+#   pt_data %>% 
+#     filter(esp_nom_commun == input$espece) %>%
+#     select(localisation, effectif) %>% 
+#     group_by(localisation) %>% 
+#     summarise(abondance = sum(effectif))
+#     })
+# 
+# renderTable ({ test() })
 
 ```
 
@@ -61,7 +71,7 @@ pt_data_aggr <- reactive({
   filter(annee >= input$annees[1],
          annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
-  group_by(code_coords) %>%
+  group_by(code_coords, esp_nom_commun, localisation, effectif) %>%
     summarise(statut = max(statut)) %>% 
   ungroup()
   })
@@ -118,7 +128,9 @@ m1 <- reactive({
                    zcol = c("localisation",
                             "esp_nom_commun",
                             "statut",
-                            "effectif"))
+                            "effectif"),
+                   row.numbers=FALSE,
+                   feature.id = FALSE)
           )) %>%
     .@map
   })
