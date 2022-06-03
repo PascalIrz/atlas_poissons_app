@@ -110,7 +110,11 @@ pt_map_data <- reactive({
     statut = as.character(statut),
     statut = ifelse(is.na(statut),
                     "Non prospecté",
-                    statut))
+                    statut)) %>% 
+    rename("Localisation" = localisation,
+           "Espèce" = esp_nom_commun,
+           "Statut" = statut,
+           "Abondance" = effectif)
   })
 
 
@@ -134,34 +138,36 @@ bv_map_data <- reactive({
                           statut),
          esp_nom_commun = ifelse(is.na(esp_nom_commun),
                               input$espece,
-                              esp_nom_commun)) 
+                              esp_nom_commun)) %>% 
+    rename("Nom du bassin" = toponyme,
+           "Espèce" = esp_nom_commun,
+           "Statut" = statut)
   })
 
 m1 <- reactive({
   (mapview(bv_map_data(),
-        zcol = "statut",
+        zcol = "Statut",
         layer.name = input$espece,
         map.types = c("OpenStreetMap", "Esri.WorldImagery"),
         col.regions = couleurs,
         alpha.regions = 0.5,
           popup = popupTable(bv_map_data(),
-                   zcol = c("toponyme",
-                            "esp_nom_commun",
-                            "statut"),
+                   zcol = c("Nom du bassin",
+                            "Espèce",
+                            "Statut"),
                    row.numbers=FALSE,
                    feature.id = FALSE)) +
     mapview(pt_map_data(),
-          zcol = "statut",
+          zcol = "Statut",
           col.region = couleurs,
      #     map.types = c("OpenStreetMap", "Esri.WorldImagery"),
           cex = 4,
           legend = FALSE,
           popup = popupTable(pt_map_data(),
-                   zcol = c("localisation",
-                            "esp_nom_commun",
-                            "statut",
-                            "effectif",
-                            "statut_lr_fr"),
+                   zcol = c("Localisation",
+                            "Espèce",
+                            "Statut",
+                            "Abondance"),
                    row.numbers = FALSE,
                    feature.id = FALSE)
           )) %>%
