@@ -69,14 +69,14 @@ renderTable ({ liste_rouge() })
 
 __**Légende**__  
 **EX** = Eteint / Extinct  
-**EW** = Eteint dans la nature / Extinct in the wild  
+**EW** = Eteint à l'état sauvage / Extinct in the wild  
 **CR** = En danger critique d'extinction / Critically endangered  
 **EN** = En danger / Endangered  
 **VU** = Vulnérable / Vulnerable  
-**NT** = Presque menacé / Near threatened  
+**NT** = Quasi menacé / Near threatened  
 **LC** = Préoccupation mineure / Least Concerned  
-**DD** = Data Deficient  
-**NE/NA** = Non évalué / Non Evaluated  
+**DD** = Données insufisantes / Data Deficient  
+**NE - NA** = Non évalué - Non applicable / Non Evaluated  
 
 
 ```{r}
