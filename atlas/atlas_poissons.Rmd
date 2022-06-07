@@ -31,13 +31,7 @@ Sidebar {.sidebar data-width=350}
 
 ```{r}
 
-selectInput(
-  "espece",
-  "Choisissez une espèce",
-  choices = sort(unique(pt_data$esp_nom_commun)),
-  selected = 1
-)
-
+# Slider années
 sliderInput(
   inputId = "annees",
   label = "Années",
@@ -51,6 +45,15 @@ sliderInput(
   sep = ""
 )
 
+# Menu sélection espèce
+selectInput(
+  "espece",
+  "Choisissez une espèce",
+  choices = sort(unique(pt_data$esp_nom_commun)),
+  selected = 1
+)
+
+# Affichage du statut UICN de l'espèce
 liste_rouge <- reactive ({ 
   pt_data %>%
     select(esp_nom_commun, statut_lr_fr) %>% 
@@ -61,19 +64,6 @@ liste_rouge <- reactive ({
 }) 
   
 renderTable ({ liste_rouge() })
-
-
-
-
-# test <- reactive ({ 
-#   pt_data %>% 
-#     filter(esp_nom_commun == input$espece) %>%
-#     select(localisation, effectif) %>% 
-#     group_by(localisation) %>% 
-#     summarise(abondance = sum(effectif))
-#     })
-# 
-# renderTable ({ test() })
 
 ```
 
@@ -90,19 +80,24 @@ __**Légende**__
 
 
 ```{r}
+
+# Construction objects reactive
+
+# Objet couleurs 
 couleurs <- c("#CC0000", "#FF99CC", "grey70", "#99FF66")
 
+# Aggrégation des données au point
 pt_data_aggr <- reactive({
   pt_data %>% 
   filter(annee >= input$annees[1],
          annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
-  group_by(code_coords, esp_nom_commun, localisation, effectif, statut_lr_fr) %>%
+  group_by(code_coords, esp_nom_commun, localisation, effectif, statut_lr_fr, fiche) %>%
     summarise(statut = max(statut)) %>% 
   ungroup()
   })
 
-
+# Ajout de la géométrie au point
 pt_map_data <- reactive({ 
   pt_geo %>% 
   left_join(pt_data_aggr()) %>% 
@@ -114,24 +109,26 @@ pt_map_data <- reactive({
     rename("Localisation" = localisation,
            "Espèce" = esp_nom_commun,
            "Statut" = statut,
-           "Abondance" = effectif)
+           "Abondance" = effectif,
+           "Fiche INPN" = fiche)
   })
 
-
+# Aggrégation des données au bv
 bv_data_aggr <- reactive({
   bv_data %>% 
   filter(annee >= input$annees[1],
          annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
-  group_by(code_exutoire, code_espece, esp_nom_commun) %>%
+  group_by(code_exutoire, code_espece, esp_nom_commun, effectif) %>%
     summarise(statut = max(statut)) %>% 
   ungroup()
   })
 
-
+# Ajout de la géométrie au bv
 bv_map_data <- reactive({
   bv_simp_geo %>% 
   left_join(bv_data_aggr()) %>% 
+    group_by(code_exutoire, code_espece, esp_nom_commun, effectif) %>%
   mutate(statut = as.character(statut),
          statut = ifelse(is.na(statut),
                           "Non prospecté",
@@ -144,6 +141,7 @@ bv_map_data <- reactive({
            "Statut" = statut)
   })
 
+# Construction des deux cartes (assemblées)
 m1 <- reactive({
   (mapview(bv_map_data(),
         zcol = "Statut",
@@ -167,7 +165,8 @@ m1 <- reactive({
                    zcol = c("Localisation",
                             "Espèce",
                             "Statut",
-                            "Abondance"),
+                            "Abondance",
+                            "Fiche INPN"),
                    row.numbers = FALSE,
                    feature.id = FALSE)
           )) %>%
@@ -176,6 +175,35 @@ m1 <- reactive({
 
 ```
 
+
+```{r}
+# Menu déroulant sélection du bassin versant
+selectInput(
+  "bassin",
+  "Choisissez un bassin versant",
+  choices = sort(unique(bv_simp_geo$toponyme)),
+  selected = 1
+)
+
+# Données bassin versant
+
+bv_data$effectif <- as.integer(bv_data$effectif) #Pour enlever la virgule et les 0
+
+liste_esp_bv <- reactive ({
+  bv_data %>% 
+    left_join(bv_simp_geo) %>% 
+    filter(toponyme == input$bassin,
+         effectif > 0) %>% 
+    select(esp_nom_commun, effectif) %>% 
+    distinct() %>% 
+    rename("Espèce" = esp_nom_commun,
+           "Abondance" = effectif)
+})
+
+# Affichage
+renderTable ({ liste_esp_bv() })
+
+```
 
 # Cartographie
 ```{r}
