@@ -56,14 +56,24 @@ selectInput(
 # Affichage du statut UICN de l'espèce
 liste_rouge <- reactive ({ 
   pt_data %>%
-    select(esp_nom_commun, statut_lr_fr) %>% 
+    select(esp_nom_commun, lr_nationale, lr_regionale) %>% 
     filter(esp_nom_commun == input$espece) %>% 
     rename("Nom commun" = esp_nom_commun,
-           "Statut liste Rouge" = statut_lr_fr) %>% 
+           "Liste Rouge France" = lr_nationale,
+           "Liste Rouge Bretagne" = lr_regionale) %>% 
+    distinct()
+}) 
+
+fiche_inpn <- reactive ({ 
+  pt_data %>%
+    filter(esp_nom_commun == input$espece) %>% 
+    select(fiche) %>% 
+    rename("Fiche INPN" = fiche) %>% 
     distinct()
 }) 
   
 renderTable ({ liste_rouge() })
+renderTable({ fiche_inpn() })
 
 ```
 
@@ -92,7 +102,7 @@ pt_data_aggr <- reactive({
   filter(annee >= input$annees[1],
          annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
-  group_by(code_coords, esp_nom_commun, localisation, effectif, statut_lr_fr, fiche) %>%
+  group_by(code_coords, esp_nom_commun, localisation, effectif) %>%
     summarise(statut = max(statut)) %>% 
   ungroup()
   })
@@ -109,8 +119,7 @@ pt_map_data <- reactive({
     rename("Localisation" = localisation,
            "Espèce" = esp_nom_commun,
            "Statut" = statut,
-           "Abondance" = effectif,
-           "Fiche INPN" = fiche)
+           "Abondance" = effectif)
   })
 
 # Aggrégation des données au bv
@@ -138,7 +147,8 @@ bv_map_data <- reactive({
                               esp_nom_commun)) %>% 
     rename("Nom du bassin" = toponyme,
            "Espèce" = esp_nom_commun,
-           "Statut" = statut)
+           "Statut" = statut,
+           "Abondance" = effectif)
   })
 
 # Construction des deux cartes (assemblées)
@@ -152,7 +162,9 @@ m1 <- reactive({
           popup = popupTable(bv_map_data(),
                    zcol = c("Nom du bassin",
                             "Espèce",
-                            "Statut"),
+                            "Statut",
+                            "Abondance"
+                            ),
                    row.numbers=FALSE,
                    feature.id = FALSE)) +
     mapview(pt_map_data(),
@@ -165,8 +177,7 @@ m1 <- reactive({
                    zcol = c("Localisation",
                             "Espèce",
                             "Statut",
-                            "Abondance",
-                            "Fiche INPN"),
+                            "Abondance"),
                    row.numbers = FALSE,
                    feature.id = FALSE)
           )) %>%
@@ -175,35 +186,6 @@ m1 <- reactive({
 
 ```
 
-
-```{r}
-# Menu déroulant sélection du bassin versant
-selectInput(
-  "bassin",
-  "Choisissez un bassin versant",
-  choices = sort(unique(bv_simp_geo$toponyme)),
-  selected = 1
-)
-
-# Données bassin versant
-
-bv_data$effectif <- as.integer(bv_data$effectif) #Pour enlever la virgule et les 0
-
-liste_esp_bv <- reactive ({
-  bv_data %>% 
-    left_join(bv_simp_geo) %>% 
-    filter(toponyme == input$bassin,
-         effectif > 0) %>% 
-    select(esp_nom_commun, effectif) %>% 
-    distinct() %>% 
-    rename("Espèce" = esp_nom_commun,
-           "Abondance" = effectif)
-})
-
-# Affichage
-renderTable ({ liste_esp_bv() })
-
-```
 
 # Cartographie
 ```{r}
