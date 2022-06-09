@@ -68,8 +68,13 @@ fiche_inpn <- reactive ({
   pt_data %>%
     filter(esp_nom_commun == input$espece) %>% 
     select(fiche) %>% 
-    rename("Fiche INPN" = fiche) %>% 
-    distinct()
+    rename("Fiche INPN" = fiche)  %>% 
+    distinct() 
+  # %>% 
+  # mutate(
+  #   "Fiche INPN"  = glue::glue("[website]({`Fiche INPN`})"),
+  #   "Fiche INPN"  = map("Fiche INPN" , gt::md)) %>%
+  # gt()
 }) 
   
 renderTable ({ liste_rouge() })
