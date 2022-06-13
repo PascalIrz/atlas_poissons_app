@@ -72,7 +72,7 @@ fiche_inpn <- reactive ({
     distinct() 
   # %>% 
   # mutate(
-  #   "Fiche INPN"  = glue::glue("[website]({`Fiche INPN`})"),
+  #   "Fiche INPN"  = glue::glue("[fiche]({`Fiche INPN`})"),
   #   "Fiche INPN"  = map("Fiche INPN" , gt::md)) %>%
   # gt()
 }) 
@@ -99,7 +99,7 @@ __**Légende**__
 # Construction objects reactive
 
 # Objet couleurs 
-couleurs <- c("#CC0000", "#FF99CC", "grey70", "#99FF66")
+couleurs <- c("#CC0000", "#FF99CC", "grey70", "#33FF66")
 
 # Aggrégation des données au point
 pt_data_aggr <- reactive({
@@ -176,7 +176,7 @@ m1 <- reactive({
           zcol = "Statut",
           col.region = couleurs,
      #     map.types = c("OpenStreetMap", "Esri.WorldImagery"),
-          cex = 4,
+          cex = ifelse(pt_map_data()$Statut == "Non prospecté", 2, 4),
           legend = FALSE,
           popup = popupTable(pt_map_data(),
                    zcol = c("Localisation",
