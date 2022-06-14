@@ -19,6 +19,7 @@ library(shiny)
 library(sf)
 library(leaflet)
 source("gg_temp.R")
+library(gt)
 ```
 
 
@@ -69,12 +70,15 @@ fiche_inpn <- reactive ({
     filter(esp_nom_commun == input$espece) %>% 
     select(fiche) %>% 
     rename("Fiche INPN" = fiche)  %>% 
-    distinct() 
-  # %>% 
+    distinct() %>%
   # mutate(
   #   "Fiche INPN"  = glue::glue("[fiche]({`Fiche INPN`})"),
   #   "Fiche INPN"  = map("Fiche INPN" , gt::md)) %>%
   # gt()
+    mutate(
+        "Fiche INPN" = map("Fiche INPN", ~ htmltools::a(href = .x, "Fiche")),
+        "Fiche INPN" = map("Fiche INPN", ~ gt::html(as.character(.x)))) %>%
+    gt()
 }) 
   
 renderTable ({ liste_rouge() })
