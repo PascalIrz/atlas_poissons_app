@@ -42,47 +42,60 @@ sliderInput(
     min(pt_data$annee, na.rm = TRUE),
     max(pt_data$annee, na.rm = TRUE)
   ) ,
-  round = 1, step = 1,
+  round = 1,
+  step = 1,
   sep = ""
 )
 
 # Menu sélection espèce
-selectInput(
-  "espece",
-  "Choisissez une espèce",
-  choices = sort(unique(pt_data$esp_nom_commun)),
-  selected = 1
-)
+selectInput("espece",
+            "Choisissez une espèce",
+            choices = sort(unique(pt_data$esp_nom_commun)),
+            selected = 1)
 
 # Affichage du statut UICN de l'espèce
-liste_rouge <- reactive ({ 
+liste_rouge <- reactive ({
   pt_data %>%
-    select(esp_nom_commun, lr_nationale, lr_regionale) %>% 
-    filter(esp_nom_commun == input$espece) %>% 
-    rename("Nom commun" = esp_nom_commun,
-           "Liste Rouge France" = lr_nationale,
-           "Liste Rouge Bretagne" = lr_regionale) %>% 
+    select(esp_nom_commun, lr_nationale, lr_regionale) %>%
+    filter(esp_nom_commun == input$espece) %>%
+    rename(
+      "Nom commun" = esp_nom_commun,
+      "Liste Rouge France" = lr_nationale,
+      "Liste Rouge Bretagne" = lr_regionale
+    ) %>%
     distinct()
-}) 
+})
 
-fiche_inpn <- reactive ({ 
+fiche_inpn <- reactive ({
   pt_data %>%
-    filter(esp_nom_commun == input$espece) %>% 
-    select(fiche) %>% 
-    rename("Fiche INPN" = fiche)  %>% 
+    filter(esp_nom_commun == input$espece) %>%
+    select(fiche) %>%
+    rename("Fiche INPN" = fiche)  %>%
     distinct() %>%
+    # Technique 1
+    # mutate(
+    #   "Fiche INPN"  = glue::glue("[fiche]({`Fiche INPN`})"),
+    #   "Fiche INPN"  = map("Fiche INPN" , gt::md)) %>%
+    # gt()
+    #
+    # Technique 2
+    # mutate(
+    #     "Fiche INPN" = map("Fiche INPN", ~ htmltools::a(href = .x, "Fiche")),
+    #     "Fiche INPN" = map("Fiche INPN", ~ gt::html(as.character(.x)))) %>%
+    # gt()
+    #
+    # Technique 3
   # mutate(
-  #   "Fiche INPN"  = glue::glue("[fiche]({`Fiche INPN`})"),
-  #   "Fiche INPN"  = map("Fiche INPN" , gt::md)) %>%
-  # gt()
-    mutate(
-        "Fiche INPN" = map("Fiche INPN", ~ htmltools::a(href = .x, "Fiche")),
-        "Fiche INPN" = map("Fiche INPN", ~ gt::html(as.character(.x)))) %>%
-    gt()
-}) 
-  
-renderTable ({ liste_rouge() })
-renderTable({ fiche_inpn() })
+  #  "Fiche INPN" =  paste0("<a href='", pt_data$"Fiche INPN", "' target='_blank'>", "</a>")) %>%
+  # DT::datatable(pt_data[, "Fiche INPN", drop = FALSE], escape = FALSE)
+})
+
+renderTable ({
+  liste_rouge()
+})
+renderTable({
+  fiche_inpn()
+})
 
 ```
 
