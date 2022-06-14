@@ -71,7 +71,8 @@ fiche_inpn <- reactive ({
     filter(esp_nom_commun == input$espece) %>%
     select(fiche) %>%
     rename("Fiche INPN" = fiche)  %>%
-    distinct() %>%
+    distinct()
+    # %>% 
     # Technique 1
     # mutate(
     #   "Fiche INPN"  = glue::glue("[fiche]({`Fiche INPN`})"),
