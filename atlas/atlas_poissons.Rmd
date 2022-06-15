@@ -70,8 +70,8 @@ fiche_inpn <- reactive ({
   pt_data %>%
     filter(esp_nom_commun == input$espece) %>%
     select(fiche) %>%
-    rename("Fiche INPN" = fiche)  %>%
-    distinct()
+    # rename("Fiche INPN" = fiche)  %>%
+    distinct() 
     # %>% 
     # Technique 1
     # mutate(
@@ -86,9 +86,9 @@ fiche_inpn <- reactive ({
     # gt()
     #
     # Technique 3
-  # mutate(
-  #  "Fiche INPN" =  paste0("<a href='", pt_data$"Fiche INPN", "' target='_blank'>", "</a>")) %>%
-  # DT::datatable(pt_data[, "Fiche INPN", drop = FALSE], escape = FALSE)
+    mutate(fiche =  paste0("<a href='",pt_data$fiche,"'target='_blank'>"
+  ,"Fiche INPN", "</a>")) %>%
+    DT::datatable(pt_data[, pt_data$fiche, drop = FALSE])
 })
 
 renderTable ({
