@@ -111,6 +111,38 @@ __**Légende**__
 **DD** = Données insufisantes / Data Deficient  
 **NE - NA** = Non évalué - Non applicable / Non Evaluated  
 
+```{r}
+
+bv_select <- bv_data %>% 
+  left_join(bv_simp_geo) %>% 
+  select(esp_nom_commun, effectif, toponyme)
+
+
+# Menu sélection bv
+selectInput("bassin",
+            "Choisissez un bassin versant",
+            choices = sort(unique(bv_select$toponyme)),
+            selected = 1)
+
+bv_data$effectif <- as.integer(bv_data$effectif) # Pour enlever la virgule et les 0
+
+bv_select <- reactive ({
+  bv_data %>% 
+    left_join(bv_simp_geo) %>% 
+    filter(toponyme == input$bassin,
+           effectif > 0) %>% 
+    select(esp_nom_commun, effectif) %>% 
+    distinct() %>% 
+  rename("Espèce" = esp_nom_commun,
+         "Abondance" = effectif)
+})
+
+renderTable({
+  bv_select()
+})
+```
+
+
 
 ```{r}
 
