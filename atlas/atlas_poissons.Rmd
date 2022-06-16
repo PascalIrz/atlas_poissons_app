@@ -66,12 +66,18 @@ liste_rouge <- reactive ({
     distinct()
 })
 
+code_especes <- pt_data %>% 
+  pull(code_alternatif)
+
 fiche_inpn <- reactive ({
-  pt_data %>%
-    filter(esp_nom_commun == input$espece) %>%
-    select(fiche) %>%
+  codes_especes %>%
+    filter(esp_nom_commun == input$espece) 
+  # %>% 
+    # unique()  %>% # ne sert à rien on dirait
+  # %>%
+    # select(code_alternatif) %>%
     # rename("Fiche INPN" = fiche)  %>%
-    distinct() 
+    # distinct() 
     # %>% 
     # Technique 1
     # mutate(
@@ -84,19 +90,24 @@ fiche_inpn <- reactive ({
     #     "Fiche INPN" = map("Fiche INPN", ~ htmltools::a(href = .x, "Fiche")),
     #     "Fiche INPN" = map("Fiche INPN", ~ gt::html(as.character(.x)))) %>%
     # gt()
-    #
+
     # Technique 3
-  #   mutate(fiche =  paste0("<a href='",pt_data$fiche,"'target='_blank'>"
-  # ,"Fiche INPN", "</a>")) %>%
-  #   DT::datatable(pt_data[, pt_data$fiche, drop = FALSE])
+    #   mutate(fiche =  paste0("<a href='",pt_data$fiche,"'target='_blank'>"
+    # ,"Fiche INPN", "</a>")) %>%
+    #   DT::datatable(pt_data[, pt_data$fiche, drop = FALSE])
+  
+    # Technique 4
+    # paste0("<a href='https://inpn.mnhn.fr/espece/cd_nom/",
+    # codes_especes$code_alternatif,  "' target='_blank'>", "Fiche",
+    # "</a>")
 })
 
 renderTable ({
   liste_rouge()
 })
-renderTable({
-  fiche_inpn()
-})
+# renderTable({
+#   fiche_inpn()
+# })
 
 ```
 
@@ -134,7 +145,7 @@ bv_select <- reactive ({
     select(esp_nom_commun, effectif) %>% 
     distinct() %>% 
   rename("Espèce" = esp_nom_commun,
-         "Abondance" = effectif)
+         "Effectif" = effectif)
 })
 
 renderTable({
