@@ -86,9 +86,9 @@ fiche_inpn <- reactive ({
     # gt()
     #
     # Technique 3
-    mutate(fiche =  paste0("<a href='",pt_data$fiche,"'target='_blank'>"
-  ,"Fiche INPN", "</a>")) %>%
-    DT::datatable(pt_data[, pt_data$fiche, drop = FALSE])
+  #   mutate(fiche =  paste0("<a href='",pt_data$fiche,"'target='_blank'>"
+  # ,"Fiche INPN", "</a>")) %>%
+  #   DT::datatable(pt_data[, pt_data$fiche, drop = FALSE])
 })
 
 renderTable ({
