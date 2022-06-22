@@ -53,104 +53,74 @@ selectInput("espece",
             choices = sort(unique(pt_data$esp_nom_commun)),
             selected = 1)
 
-# Affichage du statut UICN de l'espèce
-liste_rouge <- reactive ({
-  pt_data %>%
-    select(esp_nom_commun, lr_nationale, lr_regionale) %>%
-    filter(esp_nom_commun == input$espece) %>%
-    rename(
-      "Nom commun" = esp_nom_commun,
-      "Liste Rouge France" = lr_nationale,
-      "Liste Rouge Bretagne" = lr_regionale
-    ) %>%
-    distinct()
-})
+# Infos sur l'espèce sélectionnée
+infos_esp <- reactive ({
+  passerelle_taxo %>%
+    filter(esp_nom_commun == input$espece) %>% 
+    select(fiche_inpn,
+           lr_nationale,
+           lr_regionale)
+  })
 
-code_especes <- pt_data %>% 
-  pull(code_alternatif)
-
-fiche_inpn <- reactive ({
-  codes_especes %>%
-    filter(esp_nom_commun == input$espece) 
-  # %>% 
-    # unique()  %>% # ne sert à rien on dirait
-  # %>%
-    # select(code_alternatif) %>%
-    # rename("Fiche INPN" = fiche)  %>%
-    # distinct() 
-    # %>% 
-    # Technique 1
-    # mutate(
-    #   "Fiche INPN"  = glue::glue("[fiche]({`Fiche INPN`})"),
-    #   "Fiche INPN"  = map("Fiche INPN" , gt::md)) %>%
-    # gt()
-    #
-    # Technique 2
-    # mutate(
-    #     "Fiche INPN" = map("Fiche INPN", ~ htmltools::a(href = .x, "Fiche")),
-    #     "Fiche INPN" = map("Fiche INPN", ~ gt::html(as.character(.x)))) %>%
-    # gt()
-
-    # Technique 3
-    #   mutate(fiche =  paste0("<a href='",pt_data$fiche,"'target='_blank'>"
-    # ,"Fiche INPN", "</a>")) %>%
-    #   DT::datatable(pt_data[, pt_data$fiche, drop = FALSE])
-  
-    # Technique 4
-    # paste0("<a href='https://inpn.mnhn.fr/espece/cd_nom/",
-    # codes_especes$code_alternatif,  "' target='_blank'>", "Fiche",
-    # "</a>")
-})
-
+# Statuts liste rouge
 renderTable ({
-  liste_rouge()
-})
-# renderTable({
-#   fiche_inpn()
-# })
+  
+  liste_rouge <- c("Nationale",
+                   "Régionale")
+  
+  lr <- cbind(liste_rouge,
+          infos_esp() %>% 
+            select(-fiche_inpn) %>% 
+            t())
+  
 
+  
+ colnames(lr) <- c("Liste rouge", "Statut")
+ 
+ lr
+  
+})
+
+# Lien vers la fiche INPN
+renderUI ({
+  HTML(
+    infos_esp()$fiche_inpn
+  )
+})
 ```
 
-__**Légende**__  
-**EX** = Eteint / Extinct  
-**EW** = Eteint à l'état sauvage / Extinct in the wild  
-**CR** = En danger critique d'extinction / Critically endangered  
-**EN** = En danger / Endangered  
-**VU** = Vulnérable / Vulnerable  
-**NT** = Quasi menacé / Near threatened  
-**LC** = Préoccupation mineure / Least Concerned  
-**DD** = Données insufisantes / Data Deficient  
-**NE - NA** = Non évalué - Non applicable / Non Evaluated  
 
 ```{r}
 
-bv_select <- bv_data %>% 
-  left_join(bv_simp_geo) %>% 
-  select(esp_nom_commun, effectif, toponyme)
+# bv_select <- bv_data %>% 
+#   left_join(bv_simp_geo) %>% 
+#   select(esp_nom_commun,
+#          # effectif,
+#          toponyme)
 
 
 # Menu sélection bv
-selectInput("bassin",
-            "Choisissez un bassin versant",
-            choices = sort(unique(bv_select$toponyme)),
-            selected = 1)
+# selectInput("bassin",
+#             "Choisissez un bassin versant",
+#             choices = sort(unique(bv_select$toponyme)),
+#             selected = 1)
 
-bv_data$effectif <- as.integer(bv_data$effectif) # Pour enlever la virgule et les 0
-
-bv_select <- reactive ({
-  bv_data %>% 
-    left_join(bv_simp_geo) %>% 
-    filter(toponyme == input$bassin,
-           effectif > 0) %>% 
-    select(esp_nom_commun, effectif) %>% 
-    distinct() %>% 
-  rename("Espèce" = esp_nom_commun,
-         "Effectif" = effectif)
-})
-
-renderTable({
-  bv_select()
-})
+# bv_data$effectif <- as.integer(bv_data$effectif) # Pour enlever la virgule et les 0
+# 
+# bv_select <- reactive ({
+#   bv_data %>% 
+#     left_join(bv_simp_geo) %>% 
+#     filter(toponyme == input$bassin,
+#            effectif > 0) %>% 
+#     select(esp_nom_commun, effectif) %>% 
+#     distinct() %>% 
+#   rename("Espèce" = esp_nom_commun,
+#          "Effectif" = effectif)
+# })
+# 
+# renderTable({
+#   bv_select()
+# })
 ```
 
 
@@ -164,14 +134,18 @@ couleurs <- c("#CC0000", "#FF99CC", "grey70", "#33FF66")
 
 # Aggrégation des données au point
 pt_data_aggr <- reactive({
-  pt_data %>% 
-  filter(annee >= input$annees[1],
-         annee <= input$annees[2],
-         esp_nom_commun == input$espece) %>% 
-  group_by(code_coords, esp_nom_commun, localisation, effectif) %>%
-    summarise(statut = max(statut)) %>% 
-  ungroup()
-  })
+  pt_data %>%
+    filter(annee >= input$annees[1],
+           annee <= input$annees[2],
+           esp_nom_commun == input$espece) %>%
+    group_by(code_coords,
+             esp_nom_commun,
+             localisation,
+             #effectif
+             ) %>%
+    summarise(statut = max(statut)) %>%
+    ungroup()
+})
 
 # Ajout de la géométrie au point
 pt_map_data <- reactive({ 
@@ -184,8 +158,9 @@ pt_map_data <- reactive({
                     statut)) %>% 
     rename("Localisation" = localisation,
            "Espèce" = esp_nom_commun,
-           "Statut" = statut,
-           "Abondance" = effectif)
+           "Statut" = statut#,
+           #"Abondance" = effectif
+           )
   })
 
 # Aggrégation des données au bv
@@ -194,7 +169,8 @@ bv_data_aggr <- reactive({
   filter(annee >= input$annees[1],
          annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
-  group_by(code_exutoire, code_espece, esp_nom_commun, effectif) %>%
+  group_by(code_exutoire, code_espece, esp_nom_commun#, effectif
+           ) %>%
     summarise(statut = max(statut)) %>% 
   ungroup()
   })
@@ -203,7 +179,8 @@ bv_data_aggr <- reactive({
 bv_map_data <- reactive({
   bv_simp_geo %>% 
   left_join(bv_data_aggr()) %>% 
-    group_by(code_exutoire, code_espece, esp_nom_commun, effectif) %>%
+    group_by(code_exutoire, code_espece, esp_nom_commun#, effectif
+             ) %>%
   mutate(statut = as.character(statut),
          statut = ifelse(is.na(statut),
                           "Non prospecté",
@@ -213,8 +190,9 @@ bv_map_data <- reactive({
                               esp_nom_commun)) %>% 
     rename("Nom du bassin" = toponyme,
            "Espèce" = esp_nom_commun,
-           "Statut" = statut,
-           "Abondance" = effectif)
+           "Statut" = statut#,
+           #"Abondance" = effectif
+           )
   })
 
 # Construction des deux cartes (assemblées)
@@ -228,8 +206,8 @@ m1 <- reactive({
           popup = popupTable(bv_map_data(),
                    zcol = c("Nom du bassin",
                             "Espèce",
-                            "Statut",
-                            "Abondance"
+                            "Statut"#,
+                           # "Abondance"
                             ),
                    row.numbers=FALSE,
                    feature.id = FALSE)) +
@@ -242,8 +220,9 @@ m1 <- reactive({
           popup = popupTable(pt_map_data(),
                    zcol = c("Localisation",
                             "Espèce",
-                            "Statut",
-                            "Abondance"),
+                            "Statut"#,
+                          #  "Abondance"
+                            ),
                    row.numbers = FALSE,
                    feature.id = FALSE)
           )) %>%
@@ -274,12 +253,15 @@ leaflet::renderLeaflet({ m1() %>%
 # =====================================
 # CALCUL DATA POUR ETUDE
 
+
+
+
 data_etude <- reactive ({
   pt_data %>%
     filter(esp_nom_commun == input$espece,
            statut == "Présent") %>%
     group_by(annee, statut) %>%
-    summarise(abondance = sum(effectif),
+    summarise(#abondance = sum(effectif),
               n_presence = n())
 })
 
@@ -289,11 +271,11 @@ g1 <- reactive ({
           var_y = n_presence)
 })
 
-g2 <- reactive ({
-  gg_temp(data = data_etude(),
-          var_x = annee,
-          var_y = abondance)
-})
+# g2 <- reactive ({
+#   gg_temp(data = data_etude(),
+#           var_x = annee,
+#           var_y = abondance)
+# })
 
 ```
 
@@ -306,7 +288,7 @@ renderPlot({ g1() })
 ## Abondances
 ```{r}
 
-renderPlot({ g2() })
+# renderPlot({ g2() })
 
 ```
 
