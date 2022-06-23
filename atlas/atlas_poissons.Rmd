@@ -87,6 +87,17 @@ renderUI ({
     infos_esp()$fiche_inpn
   )
 })
+
+# click
+
+# renderTable ({
+#   
+#  click()$code_exutoire
+#   
+# })
+
+tableOutput('mytable')
+# renderText({click$id})
 ```
 
 
@@ -141,7 +152,6 @@ pt_data_aggr <- reactive({
     group_by(code_coords,
              esp_nom_commun,
              localisation,
-             #effectif
              ) %>%
     summarise(statut = max(statut)) %>%
     ungroup()
@@ -169,8 +179,9 @@ bv_data_aggr <- reactive({
   filter(annee >= input$annees[1],
          annee <= input$annees[2],
          esp_nom_commun == input$espece) %>% 
-  group_by(code_exutoire, code_espece, esp_nom_commun#, effectif
-           ) %>%
+  group_by(code_exutoire,
+           code_espece,
+           esp_nom_commun) %>%
     summarise(statut = max(statut)) %>% 
   ungroup()
   })
@@ -179,8 +190,7 @@ bv_data_aggr <- reactive({
 bv_map_data <- reactive({
   bv_simp_geo %>% 
   left_join(bv_data_aggr()) %>% 
-    group_by(code_exutoire, code_espece, esp_nom_commun#, effectif
-             ) %>%
+    group_by(code_exutoire, code_espece, esp_nom_commun) %>%
   mutate(statut = as.character(statut),
          statut = ifelse(is.na(statut),
                           "Non prospecté",
@@ -199,6 +209,7 @@ bv_map_data <- reactive({
 m1 <- reactive({
   (mapview(bv_map_data(),
         zcol = "Statut",
+        layerId = bv_map_data()$code_exutoire, # identifiant pour pouvoir cliquer les polygones
         layer.name = input$espece,
         map.types = c("OpenStreetMap", "Esri.WorldImagery"),
         col.regions = couleurs,
@@ -232,18 +243,77 @@ m1 <- reactive({
 ```
 
 
+
 # Cartographie
 ```{r}
-
-
-leaflet::renderLeaflet({ m1() %>%
+output$map <- leaflet::renderLeaflet({ m1() %>%
     leaflet::setView(lng = -3,
                      lat = 48.2,
                      zoom = 8)
   })
 
 
+leafletOutput('map')  
 
+# observeEvent(input$map_shape_click, {
+# 
+#       #capture the info of the clicked polygon
+#       click <- input$map_shape_click
+#       
+#       # #subset your table with the id of the clicked polygon 
+#       selected <- bv_map_data()[bv_map_data()$code_exutoire == click()$id,]
+#       # 
+#       # #if click id isn't null render the table
+#       if(!is.null(click()$id)){
+#         output$mytable = DT::renderDataTable({
+#           selected
+#         })
+#       }
+#     }) 
+```
+
+```{r}
+#click on polygon
+    observe({
+        event <- input$map_shape_click
+        print(event$id)
+})
+    
+
+bv_select <- reactive ({
+  
+  
+  
+  bv_data_aggr() %>%
+    filter(code_exutoire == event$id,
+           effectif > 0) %>%
+    select(esp_nom_commun, effectif) %>%
+    distinct() %>%
+  rename("Espèce" = esp_nom_commun,
+         "Effectif" = effectif)
+})
+
+renderTable({
+  bv_select()
+})
+
+      # # #subset your table with the id of the clicked polygon
+      # selected <- bv_map_data()[bv_map_data()$code_exutoire == event()$id,]
+      # #
+      # # #if click id isn't null render the table
+      # if(!is.null(event()$id)){
+      #   output$mytable = DT::renderDataTable({
+      #     selected
+      #   })
+      # }
+
+# click_marker <- eventReactive(input$map_marker_click, {
+# 
+#   x <- input$map_marker_click
+# 
+#   return(x$id)
+# 
+# })
 ```
 
 # Graphiques
