@@ -27,6 +27,15 @@ library(gt)
 load(file = "donnees_appli.RData")
 ```
 
+```{r}
+# initialisation
+click_bv_esp <- reactive({
+  DT::datatable(NULL)
+})
+```
+
+
+
 Sidebar {.sidebar data-width=350}
 =====================================
 
@@ -57,7 +66,7 @@ selectInput("espece",
 infos_esp <- reactive ({
   passerelle_taxo %>%
     filter(esp_nom_commun == input$espece) %>% 
-    select(fiche_inpn,
+    select(fiche_inpn1,
            lr_nationale,
            lr_regionale)
   })
@@ -70,10 +79,8 @@ renderTable ({
   
   lr <- cbind(liste_rouge,
           infos_esp() %>% 
-            select(-fiche_inpn) %>% 
+            select(-fiche_inpn1) %>% 
             t())
-  
-
   
  colnames(lr) <- c("Liste rouge", "Statut")
  
@@ -81,57 +88,13 @@ renderTable ({
   
 })
 
-# Lien vers la fiche INPN
+# Lien vers la fiche INPN de l'espèce sélectionnée
 renderUI ({
   HTML(
-    infos_esp()$fiche_inpn
+    infos_esp()$fiche_inpn1
   )
 })
 
-# click
-
-# renderTable ({
-#   
-#  click()$code_exutoire
-#   
-# })
-
-tableOutput('mytable')
-# renderText({click$id})
-```
-
-
-```{r}
-
-# bv_select <- bv_data %>% 
-#   left_join(bv_simp_geo) %>% 
-#   select(esp_nom_commun,
-#          # effectif,
-#          toponyme)
-
-
-# Menu sélection bv
-# selectInput("bassin",
-#             "Choisissez un bassin versant",
-#             choices = sort(unique(bv_select$toponyme)),
-#             selected = 1)
-
-# bv_data$effectif <- as.integer(bv_data$effectif) # Pour enlever la virgule et les 0
-# 
-# bv_select <- reactive ({
-#   bv_data %>% 
-#     left_join(bv_simp_geo) %>% 
-#     filter(toponyme == input$bassin,
-#            effectif > 0) %>% 
-#     select(esp_nom_commun, effectif) %>% 
-#     distinct() %>% 
-#   rename("Espèce" = esp_nom_commun,
-#          "Effectif" = effectif)
-# })
-# 
-# renderTable({
-#   bv_select()
-# })
 ```
 
 
@@ -168,8 +131,7 @@ pt_map_data <- reactive({
                     statut)) %>% 
     rename("Localisation" = localisation,
            "Espèce" = esp_nom_commun,
-           "Statut" = statut#,
-           #"Abondance" = effectif
+           "Statut" = statut
            )
   })
 
@@ -200,8 +162,7 @@ bv_map_data <- reactive({
                               esp_nom_commun)) %>% 
     rename("Nom du bassin" = toponyme,
            "Espèce" = esp_nom_commun,
-           "Statut" = statut#,
-           #"Abondance" = effectif
+           "Statut" = statut
            )
   })
 
@@ -245,6 +206,10 @@ m1 <- reactive({
 
 
 # Cartographie
+
+Column {data-width=600}
+-------------------------------------
+
 ```{r}
 output$map <- leaflet::renderLeaflet({ m1() %>%
     leaflet::setView(lng = -3,
@@ -255,66 +220,70 @@ output$map <- leaflet::renderLeaflet({ m1() %>%
 
 leafletOutput('map')  
 
-# observeEvent(input$map_shape_click, {
-# 
-#       #capture the info of the clicked polygon
-#       click <- input$map_shape_click
-#       
-#       # #subset your table with the id of the clicked polygon 
-#       selected <- bv_map_data()[bv_map_data()$code_exutoire == click()$id,]
-#       # 
-#       # #if click id isn't null render the table
-#       if(!is.null(click()$id)){
-#         output$mytable = DT::renderDataTable({
-#           selected
-#         })
-#       }
-#     }) 
 ```
 
 ```{r}
-#click on polygon
-    observe({
-        event <- input$map_shape_click
+# Liste des espèces du bassin cliqué
+click_bv_esp <- reactive ({  
+  
+  event <- input$map_shape_click
         print(event$id)
-})
-    
-
-bv_select <- reactive ({
+        
+  req(event$id) # pour éviter un message d'erreur tant qu'aucun bassin n'a été cliqué
   
-  
-  
-  bv_data_aggr() %>%
+  bv_data %>%
     filter(code_exutoire == event$id,
-           effectif > 0) %>%
-    select(esp_nom_commun, effectif) %>%
-    distinct() %>%
-  rename("Espèce" = esp_nom_commun,
-         "Effectif" = effectif)
+           statut == "Présent") %>%
+    left_join(passerelle_taxo) %>% 
+    select(fiche_inpn2) %>% 
+    distinct()
 })
 
-renderTable({
-  bv_select()
+output$click_bv_esp <- renderDataTable({
+  click_bv_esp()
+}, escape = FALSE) # argument escape = FALSE pour que les liens soient cliquables
+
+# nom du bassin cliqué
+click_bv_nom <- reactive({
+  
+  event2 <- input$map_shape_click
+       print(event2$id)
+  
+  req(event2$id)
+  
+  nom <- bv_simp_geo %>%
+    sf::st_drop_geometry() %>% 
+    filter(code_exutoire == event2$id) %>% 
+    pull(toponyme)
+  
+  nom
 })
 
-      # # #subset your table with the id of the clicked polygon
-      # selected <- bv_map_data()[bv_map_data()$code_exutoire == event()$id,]
-      # #
-      # # #if click id isn't null render the table
-      # if(!is.null(event()$id)){
-      #   output$mytable = DT::renderDataTable({
-      #     selected
-      #   })
-      # }
-
-# click_marker <- eventReactive(input$map_marker_click, {
-# 
-#   x <- input$map_marker_click
-# 
-#   return(x$id)
-# 
-# })
+output$click_bv_nom <- renderText({
+  click_bv_nom()
+})
 ```
+
+Column {data-width=300}
+-------------------------------------
+
+#### **Espèces présentes sur le bassin sélectionné**
+
+```{r}
+textOutput('click_bv_nom')
+
+output$click_bv_esp3 <- renderDataTable({
+  click_bv_esp()
+}, escape = FALSE) # argument escape = FALSE pour que les liens soient cliquables
+# Liste des espèces sur le BV sélectionné au clic
+
+# if(exists("click_bv_esp3")) 
+# {
+dataTableOutput('click_bv_esp3')
+#}
+```
+
+
 
 # Graphiques
 
@@ -330,9 +299,9 @@ data_etude <- reactive ({
   pt_data %>%
     filter(esp_nom_commun == input$espece,
            statut == "Présent") %>%
-    group_by(annee, statut) %>%
-    summarise(#abondance = sum(effectif),
-              n_presence = n())
+    group_by(annee,
+             statut) %>%
+    summarise(n_presence = n())
 })
 
 g1 <- reactive ({
@@ -340,12 +309,6 @@ g1 <- reactive ({
           var_x = annee,
           var_y = n_presence)
 })
-
-# g2 <- reactive ({
-#   gg_temp(data = data_etude(),
-#           var_x = annee,
-#           var_y = abondance)
-# })
 
 ```
 
@@ -355,20 +318,6 @@ renderPlot({ g1() })
 
 ```
 
-## Abondances
-```{r}
-
-# renderPlot({ g2() })
-
-```
-
-# affichage
-
-```{r}
-
-
-
-```
 
 
 # Méthodologie
