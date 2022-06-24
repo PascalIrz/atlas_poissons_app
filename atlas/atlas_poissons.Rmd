@@ -1,13 +1,17 @@
 ---
 title: "Atlas des poissons d'eau douce de Bretagne"
 runtime: shiny
-output: 
+output:
   flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
-    theme: cosmo
+    theme: readable
+    logo: www/faviconofb.png
+    favicon: www/faviconofb.png
 
 ---
+
+
 
 ```{r setup, include = FALSE, echo = FALSE}
 library(flexdashboard)
@@ -210,6 +214,10 @@ m1 <- reactive({
 Column {data-width=600}
 -------------------------------------
 
+<h4>
+Cliquer sur un bassin pour afficher les espèces qui y sont recensées.
+</h4>
+
 ```{r}
 output$map <- leaflet::renderLeaflet({ m1() %>%
     leaflet::setView(lng = -3,
@@ -218,7 +226,8 @@ output$map <- leaflet::renderLeaflet({ m1() %>%
   })
 
 
-leafletOutput('map')  
+leafletOutput('map',
+              height = 1000)  
 
 ```
 
@@ -235,7 +244,7 @@ click_bv_esp <- reactive ({
     filter(code_exutoire == event$id,
            statut == "Présent") %>%
     left_join(passerelle_taxo) %>% 
-    select(fiche_inpn2) %>% 
+    select(`Espèces présentes` = fiche_inpn2) %>% 
     distinct()
 })
 
@@ -254,24 +263,30 @@ click_bv_nom <- reactive({
   nom <- bv_simp_geo %>%
     sf::st_drop_geometry() %>% 
     filter(code_exutoire == event2$id) %>% 
+    slice(1) %>% 
     pull(toponyme)
   
   nom
+  
 })
 
+
+```
+
+Column {data-width=150}
+-------------------------------------
+
+<h3>
+```{r}
 output$click_bv_nom <- renderText({
   click_bv_nom()
 })
+
+textOutput('click_bv_nom')
 ```
-
-Column {data-width=300}
--------------------------------------
-
-#### **Espèces présentes sur le bassin sélectionné**
+</h3>
 
 ```{r}
-textOutput('click_bv_nom')
-
 output$click_bv_esp3 <- renderDataTable({
   click_bv_esp()
 }, escape = FALSE) # argument escape = FALSE pour que les liens soient cliquables
