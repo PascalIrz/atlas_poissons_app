@@ -246,11 +246,10 @@ click_bv_esp <- reactive ({
     left_join(passerelle_taxo) %>% 
     select(`Espèces présentes` = fiche_inpn2) %>% 
     distinct()
+  
 })
 
-output$click_bv_esp <- renderDataTable({
-  click_bv_esp()
-}, escape = FALSE) # argument escape = FALSE pour que les liens soient cliquables
+
 
 # nom du bassin cliqué
 click_bv_nom <- reactive({
@@ -273,7 +272,7 @@ click_bv_nom <- reactive({
 
 ```
 
-Column {data-width=150}
+Column {data-width=200}
 -------------------------------------
 
 <h3>
@@ -286,16 +285,53 @@ textOutput('click_bv_nom')
 ```
 </h3>
 
+<h4>
 ```{r}
-output$click_bv_esp3 <- renderDataTable({
-  click_bv_esp()
-}, escape = FALSE) # argument escape = FALSE pour que les liens soient cliquables
-# Liste des espèces sur le BV sélectionné au clic
+output$click_bv_richesse <- renderText({
+  paste0(
+    "Nombre d'espèces : ",
+    nrow(click_bv_esp()))
+})
 
-# if(exists("click_bv_esp3")) 
-# {
-dataTableOutput('click_bv_esp3')
-#}
+textOutput('click_bv_richesse')
+```
+</h4>
+
+
+```{r}
+# output$click_bv_esp3 <- renderDataTable({
+#   click_bv_esp()
+# }, escape = FALSE) # argument escape = FALSE pour que les liens soient cliquables
+# # Liste des espèces sur le BV sélectionné au clic
+# 
+# # if(exists("click_bv_esp3")) 
+# # {
+# div(
+#   dataTableOutput('click_bv_esp3'),
+#   style = "font-size:60%"
+#   )
+# #}
+```
+
+
+
+```{r}
+output$click_bv_esp2 <- DT::renderDT({
+    
+  DT::datatable(click_bv_esp(),
+    options = list(info = FALSE,
+                   pageLength = 18,
+                   lengthChange = FALSE,
+                   searching = FALSE),
+    colnames = "",
+    escape = FALSE)
+  
+}) # argument escape = FALSE pour que les liens soient cliquables
+
+div(
+  DT::DTOutput('click_bv_esp2'),
+  style = "font-size:90%"
+  )
 ```
 
 
