@@ -335,8 +335,12 @@ div(
 ```
 
 
-
+```{r}
 # Graphiques
+
+```
+
+
 
 ```{r}
 
@@ -346,26 +350,26 @@ div(
 
 
 
-data_etude <- reactive ({
-  pt_data %>%
-    filter(esp_nom_commun == input$espece,
-           statut == "Présent") %>%
-    group_by(annee,
-             statut) %>%
-    summarise(n_presence = n())
-})
+# data_etude <- reactive ({
+#   pt_data %>%
+#     filter(esp_nom_commun == input$espece,
+#            statut == "Présent") %>%
+#     group_by(annee,
+#              statut) %>%
+#     summarise(n_presence = n())
+# })
 
-g1 <- reactive ({
-  gg_temp(data = data_etude(),
-          var_x = annee,
-          var_y = n_presence)
-})
+# g1 <- reactive ({
+#   gg_temp(data = data_etude(),
+#           var_x = annee,
+#           var_y = n_presence)
+# })
 
 ```
 
-## Présences
+
 ```{r}
-renderPlot({ g1() })
+# renderPlot({ g1() })
 
 ```
 
